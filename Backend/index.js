@@ -150,3 +150,38 @@ app.post('/transactions', (req, res) => {
         res.json("Transaction recorded");
     });
 });
+
+// GET a user's favourited products
+app.get('/favourites/:userId', (req, res) => {
+    const q = `
+        SELECT f.DateAdded, p.* FROM Favourites f 
+        JOIN Products p ON f.ProductID = p.ProductID 
+        WHERE f.UserID = ?`;
+    db.query(q, [req.params.userId], (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST to add an item to favourites
+app.post('/favourites', (req, res) => {
+    const q = "INSERT INTO Favourites (UserID, ProductID, DateAdded) VALUES (?, ?, NOW())";
+    const values = [req.body.UserID, req.body.ProductID];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Item added to favourites");
+    });
+});
+
+// GET prices and availability for a specific product across all stores
+app.get('/products/:id/availability', (req, res) => {
+    const q = `
+        SELECT s.Name as StoreName, st.Price, st.LastUpdated 
+        FROM Stocks st 
+        JOIN Stores s ON st.StoreID = s.StoreID 
+        WHERE st.ProductID = ?`;
+    db.query(q, [req.params.id], (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
