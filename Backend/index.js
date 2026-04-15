@@ -94,3 +94,22 @@ app.post('/posts', (req, res) => {
         res.json("Split post created");
     });
 });
+
+// CREATE a group (Triggered when enough users join a split)
+app.post('/groups', (req, res) => {
+    const q = 'INSERT INTO Groups (DateCreated, Status) VALUES (NOW(), "Forming")';
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Group formed", GroupID: data.insertId });
+    });
+});
+
+// POST user joining a group (Participates_In table)
+app.post('/participate', (req, res) => {
+    const q = 'INSERT INTO Participates_In (UserID, GroupID, QuantityRequested) VALUES (?, ?, ?)';
+    const values = [req.body.UserID, req.body.GroupID, req.body.QuantityRequested];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("User joined group");
+    });
+});
