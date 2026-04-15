@@ -10,7 +10,7 @@ app.use(cors());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'password',
+    password: 'Pakvov-qospy7-redgok',
     database: 'wholesplitdb'
 });
 
@@ -61,13 +61,43 @@ app.get('/products', (req, res) => {
     });
 });
 
-// POST new product (Moderator/Admin use)
-app.post('/products', (req, res) => {
-    const q = 'INSERT INTO Products (ProductID, ProductName, Brand, BulkSize, BulkAmount) VALUES (?, ?, ?, ?, ?)';
-    const values = [req.body.ProductID, req.body.ProductName, req.body.Brand, req.body.BulkSize, req.body.BulkAmount];
+
+const checkAdmin = (req, res, next) => {
+    const adminSSN = req.headers['admin-ssn']; 
+
+    if (!adminSSN) {
+        return res.status(403).json("Access denied. Admin credentials required.");
+    }
+
+    const q = "SELECT * FROM administrators WHERE SSN = ?";
+    db.query(q, [adminSSN], (err, data) => {
+        if (err) return res.status(500).json(err);
+        
+        if (data.length > 0) {
+            next(); 
+        } else {
+            res.status(403).json("Unauthorized: You are not an administrator.");
+        }
+    });
+};
+
+// 2. Creating a store (must be admin)
+app.post('/stores', checkAdmin, (req, res) => {
+    const q = "INSERT INTO Stores (Name, City, Street, PostalCode) VALUES (?, ?, ?, ?)";
+    const values = [req.body.Name, req.body.City, req.body.Street, req.body.PostalCode];
+
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json("Product added successfully");
+        res.json("Store added successfully!");
+    });
+});
+
+// Only admins can delete a product
+app.delete('/products/:id', checkAdmin, (req, res) => {
+    const q = "DELETE FROM Products WHERE ProductID = ?";
+    db.query(q, [req.params.id], (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("Product removed from catalog.");
     });
 });
 
@@ -95,31 +125,34 @@ app.post('/posts', (req, res) => {
     });
 });
 
-// CREATE a group (Triggered when enough users join a split)
-app.post('/groups', (req, res) => {
-    const q = 'INSERT INTO Groups (DateCreated, Status) VALUES (NOW(), "Forming")';
-    db.query(q, (err, data) => {
-        if (err) return res.status(500).json(err);
-        res.json({ message: "Group formed", GroupID: data.insertId });
-    });
-});
 
-// POST user joining a group (Participates_In table)
-app.post('/participate', (req, res) => {
-    const q = 'INSERT INTO Participates_In (UserID, GroupID, QuantityRequested) VALUES (?, ?, ?)';
-    const values = [req.body.UserID, req.body.GroupID, req.body.QuantityRequested];
+// Create a group
+app.post('/groups', (req, res) => {
+    
+    const q = 'INSERT INTO splitgroups (DateCreated, Status, StoreID, CreatorUserID) VALUES (NOW(), "Forming", ?, ?)';
+    
+    
+    const values = [
+        req.body.StoreID, 
+        req.body.CreatorUserID
+    ];
+
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json("User joined group");
+        return res.json({ 
+            message: "Group created successfully", 
+            groupID: data.insertId 
+        });
     });
 });
 
-// GET stores and their locations
+
+// GET all available stores for the user to choose from
 app.get('/stores', (req, res) => {
-    const q = 'SELECT s.Name, l.City, l.Street FROM Stores s JOIN Locations l ON s.PostalCode = l.PostalCode';
+    const q = "SELECT StoreID, Name, City, Street FROM Stores";
     db.query(q, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json(data);
+        return res.json(data);
     });
 });
 
@@ -151,25 +184,29 @@ app.post('/transactions', (req, res) => {
     });
 });
 
-// GET a user's favourited products
+// 1. POST: To ADD an item (URL: /favourites)
+app.post('/favourites', (req, res) => {
+    // Note: We use the data from the Body (req.body)
+    const q = "INSERT INTO Favourites (UserID, ProductID, DateAdded) VALUES (?, ?, NOW())";
+    const values = [req.body.UserID, req.body.ProductID];
+
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("Item added to favourites successfully!");
+    });
+});
+
+// 2. GET: To VIEW a specific user's items (URL: /favourites/101)
 app.get('/favourites/:userId', (req, res) => {
+    // Note: We use the ID from the URL (req.params)
     const q = `
         SELECT f.DateAdded, p.* FROM Favourites f 
         JOIN Products p ON f.ProductID = p.ProductID 
         WHERE f.UserID = ?`;
+
     db.query(q, [req.params.userId], (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json(data);
-    });
-});
-
-// POST to add an item to favourites
-app.post('/favourites', (req, res) => {
-    const q = "INSERT INTO Favourites (UserID, ProductID, DateAdded) VALUES (?, ?, NOW())";
-    const values = [req.body.UserID, req.body.ProductID];
-    db.query(q, values, (err, data) => {
-        if (err) return res.status(500).json(err);
-        res.json("Item added to favourites");
+        return res.json(data);
     });
 });
 
@@ -183,6 +220,14 @@ app.get('/products/:id/availability', (req, res) => {
     db.query(q, [req.params.id], (err, data) => {
         if (err) return res.status(500).json(err);
         res.json(data);
+    });
+});
+
+app.get('/products', (req, res) => {
+    const q = "SELECT * FROM Products";
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
     });
 });
 
@@ -212,6 +257,15 @@ app.get('/groups/:groupId/split', (req, res) => {
     });
 });
 
+// GET all groups 
+app.get('/groups', (req, res) => {
+    const q = "SELECT * FROM splitgroups"; 
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
+    });
+});
+
 // POST split calculation 
 app.post('/split-details', (req, res) => {
     // CalculatedTotalSplit is usually a derived attribute, but we store it here
@@ -221,5 +275,17 @@ app.post('/split-details', (req, res) => {
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
         res.json("Split details finalized");
+    });
+});
+
+// GET all registered locations
+app.get('/locations', (req, res) => {
+    const q = "SELECT * FROM locations";
+    db.query(q, (err, data) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+        return res.json(data);
     });
 });
