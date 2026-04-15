@@ -61,13 +61,43 @@ app.get('/products', (req, res) => {
     });
 });
 
-// POST new product (Moderator/Admin use)
-app.post('/products', (req, res) => {
-    const q = 'INSERT INTO Products (ProductID, ProductName, Brand, BulkSize, BulkAmount) VALUES (?, ?, ?, ?, ?)';
-    const values = [req.body.ProductID, req.body.ProductName, req.body.Brand, req.body.BulkSize, req.body.BulkAmount];
+
+const checkAdmin = (req, res, next) => {
+    const adminSSN = req.headers['admin-ssn']; 
+
+    if (!adminSSN) {
+        return res.status(403).json("Access denied. Admin credentials required.");
+    }
+
+    const q = "SELECT * FROM administrators WHERE SSN = ?";
+    db.query(q, [adminSSN], (err, data) => {
+        if (err) return res.status(500).json(err);
+        
+        if (data.length > 0) {
+            next(); 
+        } else {
+            res.status(403).json("Unauthorized: You are not an administrator.");
+        }
+    });
+};
+
+// 2. Creating a store (must be admin)
+app.post('/stores', checkAdmin, (req, res) => {
+    const q = "INSERT INTO Stores (Name, City, Street, PostalCode) VALUES (?, ?, ?, ?)";
+    const values = [req.body.Name, req.body.City, req.body.Street, req.body.PostalCode];
+
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json("Product added successfully");
+        res.json("Store added successfully!");
+    });
+});
+
+// Only admins can delete a product
+app.delete('/products/:id', checkAdmin, (req, res) => {
+    const q = "DELETE FROM Products WHERE ProductID = ?";
+    db.query(q, [req.params.id], (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("Product removed from catalog.");
     });
 });
 
@@ -245,15 +275,6 @@ app.post('/split-details', (req, res) => {
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
         res.json("Split details finalized");
-    });
-});
-
-// DELETE a post (e.g., if a split is finished or cancelled)
-app.delete('/posts/:id', (req, res) => {
-    const q = "DELETE FROM Posts WHERE PostID = ?";
-    db.query(q, [req.params.id], (err, data) => {
-        if (err) return res.status(500).json(err);
-        return res.json("Post has been deleted successfully");
     });
 });
 
