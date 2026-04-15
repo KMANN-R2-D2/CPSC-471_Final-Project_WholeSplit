@@ -113,3 +113,40 @@ app.post('/participate', (req, res) => {
         res.json("User joined group");
     });
 });
+
+// GET stores and their locations
+app.get('/stores', (req, res) => {
+    const q = 'SELECT s.Name, l.City, l.Street FROM Stores s JOIN Locations l ON s.PostalCode = l.PostalCode';
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST membership holder info
+app.post('/memberships', (req, res) => {
+    const q = 'INSERT INTO MembershipHolders (MembershipID, UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?, ?)';
+    const values = [req.body.MembershipID, req.body.UserID, req.body.MembershipStore, req.body.MembershipExpirationDate];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Membership verified");
+    });
+});
+
+// GET all administrators
+app.get('/admins', (req, res) => {
+    db.query('SELECT * FROM Administrators', (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST payment transaction
+app.post('/transactions', (req, res) => {
+    const q = 'INSERT INTO Payment_Transactions (Date, Status, TotalAmount, GroupID) VALUES (NOW(), "Pending", ?, ?)';
+    const values = [req.body.TotalAmount, req.body.GroupID];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Transaction recorded");
+    });
+});
