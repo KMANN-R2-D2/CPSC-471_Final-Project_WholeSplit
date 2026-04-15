@@ -154,25 +154,29 @@ app.post('/transactions', (req, res) => {
     });
 });
 
-// GET a user's favourited products
+// 1. POST: To ADD an item (URL: /favourites)
+app.post('/favourites', (req, res) => {
+    // Note: We use the data from the Body (req.body)
+    const q = "INSERT INTO Favourites (UserID, ProductID, DateAdded) VALUES (?, ?, NOW())";
+    const values = [req.body.UserID, req.body.ProductID];
+
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("Item added to favourites successfully!");
+    });
+});
+
+// 2. GET: To VIEW a specific user's items (URL: /favourites/101)
 app.get('/favourites/:userId', (req, res) => {
+    // Note: We use the ID from the URL (req.params)
     const q = `
         SELECT f.DateAdded, p.* FROM Favourites f 
         JOIN Products p ON f.ProductID = p.ProductID 
         WHERE f.UserID = ?`;
+
     db.query(q, [req.params.userId], (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json(data);
-    });
-});
-
-// POST to add an item to favourites
-app.post('/favourites', (req, res) => {
-    const q = "INSERT INTO Favourites (UserID, ProductID, DateAdded) VALUES (?, ?, NOW())";
-    const values = [req.body.UserID, req.body.ProductID];
-    db.query(q, values, (err, data) => {
-        if (err) return res.status(500).json(err);
-        res.json("Item added to favourites");
+        return res.json(data);
     });
 });
 
@@ -250,5 +254,17 @@ app.delete('/posts/:id', (req, res) => {
     db.query(q, [req.params.id], (err, data) => {
         if (err) return res.status(500).json(err);
         return res.json("Post has been deleted successfully");
+    });
+});
+
+// GET all registered locations
+app.get('/locations', (req, res) => {
+    const q = "SELECT * FROM locations";
+    db.query(q, (err, data) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+        return res.json(data);
     });
 });
