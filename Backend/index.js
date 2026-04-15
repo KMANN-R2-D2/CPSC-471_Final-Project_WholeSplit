@@ -189,6 +189,14 @@ app.get('/products/:id/availability', (req, res) => {
     });
 });
 
+app.get('/products', (req, res) => {
+    const q = "SELECT * FROM Products";
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
+    });
+});
+
 // Joining a post
 app.post('/participate', (req, res) => {
     // Links a User to a Group and tracks how much they want
