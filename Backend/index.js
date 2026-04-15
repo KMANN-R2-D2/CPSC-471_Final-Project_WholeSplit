@@ -70,3 +70,27 @@ app.post('/products', (req, res) => {
         res.json("Product added successfully");
     });
 });
+
+// GET all active split posts (Join with Products for UI display)
+app.get('/posts', (req, res) => {
+    const q = `
+        SELECT p.*, pr.ProductName, u.FName 
+        FROM Posts p 
+        JOIN Products pr ON p.ProductID = pr.ProductID 
+        JOIN Users u ON p.UserID = u.UserID 
+        WHERE p.Status = "Open"`;
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST a new split request
+app.post('/posts', (req, res) => {
+    const q = 'INSERT INTO Posts (QuantityRequested, DatePosted, Status, UserID, ProductID) VALUES (?, NOW(), "Open", ?, ?)';
+    const values = [req.body.QuantityRequested, req.body.UserID, req.body.ProductID];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Split post created");
+    });
+});
