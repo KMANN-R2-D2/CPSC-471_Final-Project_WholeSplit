@@ -95,31 +95,34 @@ app.post('/posts', (req, res) => {
     });
 });
 
-// CREATE a group (Triggered when enough users join a split)
-app.post('/groups', (req, res) => {
-    const q = 'INSERT INTO Groups (DateCreated, Status) VALUES (NOW(), "Forming")';
-    db.query(q, (err, data) => {
-        if (err) return res.status(500).json(err);
-        res.json({ message: "Group formed", GroupID: data.insertId });
-    });
-});
 
-// POST user joining a group (Participates_In table)
-app.post('/participate', (req, res) => {
-    const q = 'INSERT INTO Participates_In (UserID, GroupID, QuantityRequested) VALUES (?, ?, ?)';
-    const values = [req.body.UserID, req.body.GroupID, req.body.QuantityRequested];
+// Create a group
+app.post('/groups', (req, res) => {
+    
+    const q = 'INSERT INTO splitgroups (DateCreated, Status, StoreID, CreatorUserID) VALUES (NOW(), "Forming", ?, ?)';
+    
+    
+    const values = [
+        req.body.StoreID, 
+        req.body.CreatorUserID
+    ];
+
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json("User joined group");
+        return res.json({ 
+            message: "Group created successfully", 
+            groupID: data.insertId 
+        });
     });
 });
 
-// GET stores and their locations
+
+// GET all available stores for the user to choose from
 app.get('/stores', (req, res) => {
-    const q = 'SELECT s.Name, l.City, l.Street FROM Stores s JOIN Locations l ON s.PostalCode = l.PostalCode';
+    const q = "SELECT StoreID, Name, City, Street FROM Stores";
     db.query(q, (err, data) => {
         if (err) return res.status(500).json(err);
-        res.json(data);
+        return res.json(data);
     });
 });
 
@@ -212,6 +215,15 @@ app.get('/groups/:groupId/split', (req, res) => {
     });
 });
 
+// GET all groups 
+app.get('/groups', (req, res) => {
+    const q = "SELECT * FROM splitgroups"; 
+    db.query(q, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json(data);
+    });
+});
+
 // POST split calculation 
 app.post('/split-details', (req, res) => {
     // CalculatedTotalSplit is usually a derived attribute, but we store it here
@@ -221,5 +233,14 @@ app.post('/split-details', (req, res) => {
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
         res.json("Split details finalized");
+    });
+});
+
+// DELETE a post (e.g., if a split is finished or cancelled)
+app.delete('/posts/:id', (req, res) => {
+    const q = "DELETE FROM Posts WHERE PostID = ?";
+    db.query(q, [req.params.id], (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("Post has been deleted successfully");
     });
 });
