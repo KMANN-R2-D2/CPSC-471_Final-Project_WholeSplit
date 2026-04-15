@@ -53,3 +53,20 @@ app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
 
+// GET all products
+app.get('/products', (req, res) => {
+    db.query('SELECT * FROM Products', (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST new product (Moderator/Admin use)
+app.post('/products', (req, res) => {
+    const q = 'INSERT INTO Products (ProductID, ProductName, Brand, BulkSize, BulkAmount) VALUES (?, ?, ?, ?, ?)';
+    const values = [req.body.ProductID, req.body.ProductName, req.body.Brand, req.body.BulkSize, req.body.BulkAmount];
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Product added successfully");
+    });
+});
