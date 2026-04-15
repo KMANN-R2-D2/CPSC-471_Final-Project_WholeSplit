@@ -10,7 +10,7 @@ app.use(cors());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'password',
+    password: 'Pakvov-qospy7-redgok',
     database: 'wholesplitdb'
 });
 
