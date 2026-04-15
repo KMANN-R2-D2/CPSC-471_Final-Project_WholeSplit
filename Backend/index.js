@@ -185,3 +185,41 @@ app.get('/products/:id/availability', (req, res) => {
         res.json(data);
     });
 });
+
+// Joining a post
+app.post('/participate', (req, res) => {
+    // Links a User to a Group and tracks how much they want
+    const q = "INSERT INTO Participates_In (UserID, GroupID, QuantityRequested) VALUES (?, ?, ?)";
+    const values = [req.body.UserID, req.body.GroupID, req.body.QuantityRequested];
+    
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("User has joined the split group!");
+    });
+});
+
+// GET details for a specific group split
+app.get('/groups/:groupId/split', (req, res) => {
+    const q = `
+        SELECT sd.*, g.Status 
+        FROM SplitDetail sd 
+        JOIN Groups g ON sd.GroupID = g.GroupID 
+        WHERE sd.GroupID = ?`;
+    
+    db.query(q, [req.params.groupId], (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json(data);
+    });
+});
+
+// POST split calculation 
+app.post('/split-details', (req, res) => {
+    // CalculatedTotalSplit is usually a derived attribute, but we store it here
+    const q = "INSERT INTO SplitDetail (GroupID, SplitID, Parts, CalculatedTotalSplit) VALUES (?, ?, ?, ?)";
+    const values = [req.body.GroupID, req.body.SplitID, req.body.Parts, req.body.CalculatedTotalSplit];
+    
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        res.json("Split details finalized");
+    });
+});
