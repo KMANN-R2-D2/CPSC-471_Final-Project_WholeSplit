@@ -52,6 +52,22 @@ const Feed = () => {
             </tr>
         ))}
         </tbody>
+
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <h1 style={{ color: "#2c3e50" }}>Community Split Feed</h1>
+  <Link to="/create-post">
+    <button style={{ 
+      backgroundColor: "#27ae60", 
+      color: "white", 
+      padding: "10px 20px", 
+      border: "none", 
+      borderRadius: "4px", 
+      cursor: "pointer" 
+    }}>
+      + New Split Request
+    </button>
+  </Link>
+</div>
       </table>
     </div>
   );
