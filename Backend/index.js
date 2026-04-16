@@ -2,7 +2,6 @@ import express from 'express';
 import mysql from 'mysql2';
 import cors from 'cors';
 
-
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -101,23 +100,36 @@ app.delete('/products/:id', checkAdmin, (req, res) => {
     });
 });
 
-// GET all active split posts (Join with Products for UI display)
-app.get('/posts', (req, res) => {
-    const q = `
-        SELECT p.*, pr.ProductName, u.FName 
-        FROM Posts p 
-        JOIN Products pr ON p.ProductID = pr.ProductID 
-        JOIN Users u ON p.UserID = u.UserID 
-        WHERE p.Status = "Open"`;
-    db.query(q, (err, data) => {
-        if (err) return res.status(500).json(err);
-        res.json(data);
-    });
+app.get("/posts", (req, res) => {
+  const q = `
+    SELECT 
+      p.PostID, 
+      p.QuantityRequested, 
+      p.DatePosted, 
+      p.Status, 
+      u.FName, 
+      u.LName, 
+      l.City, 
+      pr.ProductName, 
+      pr.Brand
+    FROM posts p
+    JOIN users u ON p.UserID = u.UserID
+    JOIN locations l ON u.PostalCode = l.PostalCode
+    JOIN products pr ON p.ProductID = pr.ProductID
+  `;
+
+  db.query(q, (err, data) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json(err);
+    }
+    return res.json(data);
+  });
 });
 
 // POST a new split request
 app.post('/posts', (req, res) => {
-    const q = 'INSERT INTO Posts (QuantityRequested, DatePosted, Status, UserID, ProductID) VALUES (?, NOW(), "Open", ?, ?)';
+    const q = 'INSERT INTO posts (QuantityRequested, DatePosted, Status, UserID, ProductID) VALUES (?, NOW(), "Open", ?, ?)';
     const values = [req.body.QuantityRequested, req.body.UserID, req.body.ProductID];
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
@@ -125,25 +137,37 @@ app.post('/posts', (req, res) => {
     });
 });
 
+// Creating a group
+app.post("/groups", (req, res) => {
+  const { StoreID, ResponderUserID, PostID } = req.body;
 
-// Create a group
-app.post('/groups', (req, res) => {
-    
-    const q = 'INSERT INTO splitgroups (DateCreated, Status, StoreID, CreatorUserID) VALUES (NOW(), "Forming", ?, ?)';
-    
-    
-    const values = [
-        req.body.StoreID, 
-        req.body.CreatorUserID
-    ];
+const checkMemberQ = "SELECT * FROM membershipholders WHERE UserID = ?";
 
-    db.query(q, values, (err, data) => {
+db.query(checkMemberQ, [ResponderUserID], (err, data) => {
+    if (err) return res.status(500).json(err);
+    
+    // If the data array is empty, it means this user isn't a membership holder
+    if (data.length === 0) {
+      return res.status(403).json("Access Denied: You aren't in the MembershipHolders table!");
+    }
+
+    // STEP 2: If they passed the check, create the group
+    const createGroupQ = `
+      INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID) 
+      VALUES ('Active', NOW(), ?, ?)
+    `;
+
+    db.query(createGroupQ, [StoreID, ResponderUserID], (err, result) => {
+      if (err) return res.status(500).json(err);
+
+      // STEP 3: Update the Post status
+      const updatePostQ = "UPDATE posts SET Status = 'Pending' WHERE PostID = ?";
+      db.query(updatePostQ, [PostID], (err) => {
         if (err) return res.status(500).json(err);
-        return res.json({ 
-            message: "Group created successfully", 
-            groupID: data.insertId 
-        });
+        return res.status(200).json("Success: Group created by verified member.");
+      });
     });
+  });
 });
 
 
@@ -158,8 +182,8 @@ app.get('/stores', (req, res) => {
 
 // POST membership holder info
 app.post('/memberships', (req, res) => {
-    const q = 'INSERT INTO MembershipHolders (MembershipID, UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?, ?)';
-    const values = [req.body.MembershipID, req.body.UserID, req.body.MembershipStore, req.body.MembershipExpirationDate];
+    const q = 'INSERT INTO MembershipHolders (UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?, ?)';
+    const values = [req.body.UserID, req.body.MembershipStore, req.body.MembershipExpirationDate];
     db.query(q, values, (err, data) => {
         if (err) return res.status(500).json(err);
         res.json("Membership verified");
@@ -288,4 +312,31 @@ app.get('/locations', (req, res) => {
         }
         return res.json(data);
     });
+});
+
+app.post("/login", (req, res) => {
+  const { Email, Password } = req.body;
+  
+  // We JOIN with membershipholders to see if a MembershipID exists for this user
+  const q = `
+    SELECT u.UserID, u.FName, u.LName, u.Email, m.MembershipID 
+    FROM users u
+    LEFT JOIN membershipholders m ON u.UserID = m.UserID
+    WHERE u.Email = ? AND u.Password = ?
+  `;
+
+  db.query(q, [Email, Password], (err, data) => {
+    if (err) return res.status(500).json(err);
+    
+    if (data.length > 0) {
+      const user = data[0];
+      // If MembershipID is null, they aren't a member. 
+      // We can create a "virtual" status to make the frontend easier to read.
+      user.isMember = user.MembershipID ? true : false;
+      
+      return res.status(200).json(user);
+    } else {
+      return res.status(401).json("Invalid email or password.");
+    }
+  });
 });
