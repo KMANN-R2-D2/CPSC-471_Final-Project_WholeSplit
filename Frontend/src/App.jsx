@@ -8,6 +8,8 @@ import CreatePost from "./pages/CreatePost";
 import PickStore from "./pages/PickStore";
 import Products from "./pages/ProductPage";
 import Users from "./pages/users";
+import JoinDetails from "./pages/JoinDetails";
+
 
 function App() {
   return (
@@ -24,7 +26,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/create-group/:postId" element={<PickStore />} />
-          {/* <Route path="/pick-store/:postId" element={<PickStore />} /> */}
+          <Route path="/join-details/:postId" element={<JoinDetails />} />
           <Route path="/products" element={<Products />} />
           <Route path="/users" element={<Users />} />
         </Routes>
