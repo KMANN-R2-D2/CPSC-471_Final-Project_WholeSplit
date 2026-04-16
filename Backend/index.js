@@ -136,33 +136,51 @@ app.delete('/products/:id', checkAdmin, (req, res) => {
  * GET POSTS WITH JOINS
  * Combines multiple tables (users, locations, products) to enrich post data
  */
+// app.get("/posts", (req, res) => {
+//   const q = `
+//     SELECT 
+//       p.PostID, 
+//       p.ProductName, 
+//       p.QuantityRequested AS InitialOffer, 
+//       p.DateCreated AS DatePosted, 
+//       p.Status,
+//       COALESCE(SUM(sg.QuantityTaken), 0) AS TotalDeducted,
+//       (p.QuantityRequested - COALESCE(SUM(sg.QuantityTaken), 0)) AS UnitsRemaining
+//     FROM posts p
+//     LEFT JOIN splitgroups sg ON p.PostID = sg.PostID
+//     GROUP BY p.PostID
+//     ORDER BY p.DateCreated DESC
+//   `;
+
+//   db.query(q, (err, data) => {
+//     if (err) return res.status(500).json(err);
+//     res.json(data);
+//   });
+// });
 app.get("/posts", (req, res) => {
   const q = `
     SELECT 
       p.PostID, 
+      pr.ProductName, -- Getting name from the products table
       p.QuantityRequested, 
       p.DatePosted, 
-      p.Status, 
-      u.FName, 
-      u.LName, 
-      l.City, 
-      pr.ProductName, 
-      pr.Brand
+      p.Status,
+      COALESCE(SUM(sg.QuantityTaken), 0) AS UnitsClaimed
     FROM posts p
-    JOIN users u ON p.UserID = u.UserID
-    JOIN locations l ON u.PostalCode = l.PostalCode
     JOIN products pr ON p.ProductID = pr.ProductID
+    LEFT JOIN splitgroups sg ON p.PostID = sg.PostID
+    GROUP BY p.PostID, pr.ProductName, p.QuantityRequested, p.DatePosted, p.Status
+    ORDER BY p.DatePosted DESC
   `;
 
   db.query(q, (err, data) => {
     if (err) {
-      console.error("Database Error:", err);
+      console.error("DEBUG - SQL Error:", err.sqlMessage);
       return res.status(500).json(err);
     }
     return res.json(data);
   });
 });
-
 /**
  * CREATE NEW POST (SPLIT REQUEST)
  */
@@ -185,36 +203,54 @@ app.post('/posts', (req, res) => {
 });
 
 app.post("/groups", (req, res) => {
-  const { StoreID, ResponderUserID, PostID } = req.body;
+  const { StoreID, ResponderUserID, PostID, QuantityTaken } = req.body;
 
-  // 1. Add the user to the group first
-  const joinQ = `INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID, PostID) VALUES (?, NOW(), ?, ?, ?)`;
+  // 1. FIRST: Check how many units are actually left
+  const checkAvailabilityQ = `
+    SELECT p.QuantityRequested, COALESCE(SUM(sg.QuantityTaken), 0) AS TotalTaken
+    FROM posts p
+    LEFT JOIN splitgroups sg ON p.PostID = sg.PostID
+    WHERE p.PostID = ?
+    GROUP BY p.PostID`;
 
-  db.query(joinQ, ['Active', StoreID, ResponderUserID, PostID], (err) => {
-    if (err) return res.status(500).json(err);
+  db.query(checkAvailabilityQ, [PostID], (err, results) => {
+    if (err || results.length === 0) return res.status(500).json(err);
 
-    // 2. CHECK: Does this group now contain AT LEAST ONE membership holder?
-    const checkGroupMemberQ = `
-      SELECT m.MembershipID 
-      FROM splitgroups sg
-      JOIN membershipholders m ON sg.CreatorUserID = m.UserID
-      WHERE sg.PostID = ?
-    `;
+    const { QuantityRequested, TotalTaken } = results[0];
+    const remaining = QuantityRequested - TotalTaken;
 
-    db.query(checkGroupMemberQ, [PostID], (err2, members) => {
+    // 2. VALIDATION: If user wants more than what's left, stop them
+    if (QuantityTaken > remaining) {
+      return res.status(400).json({ 
+        message: `Only ${remaining} units available. You cannot claim ${QuantityTaken}.` 
+      });
+    }
+
+    // 3. PROCEED: If valid, insert the record
+    const joinQ = `
+      INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID, PostID, QuantityTaken) 
+      VALUES ('Active', NOW(), ?, ?, ?, ?)`;
+
+    db.query(joinQ, [StoreID, ResponderUserID, PostID, QuantityTaken], (err2) => {
       if (err2) return res.status(500).json(err2);
 
-      // 3. STATUS LOGIC: 
-      // If the list of members found is > 0, someone in the group has a card!
-      const finalStatus = members.length > 0 ? "Fulfillment In Progress" : "Pending Member";
+      // 4. MEMBERSHIP CHECK: Update the status (same logic as before)
+      const checkMemberQ = `
+        SELECT m.MembershipID FROM splitgroups sg
+        JOIN membershipholders m ON sg.CreatorUserID = m.UserID
+        WHERE sg.PostID = ?`;
 
-      const updatePostQ = "UPDATE posts SET Status = ? WHERE PostID = ?";
-      db.query(updatePostQ, [finalStatus, PostID], (err3) => {
+      db.query(checkMemberQ, [PostID], (err3, members) => {
         if (err3) return res.status(500).json(err3);
-        
-        return res.status(200).json({ 
-          message: "Successfully joined the group!",
-          currentStatus: finalStatus 
+
+        const newTotalTaken = parseInt(TotalTaken) + parseInt(QuantityTaken);
+        let finalStatus = (newTotalTaken >= QuantityRequested) ? "Full" : 
+                          (members.length > 0 ? "Fulfillment In Progress" : "Pending Member");
+
+        const updatePostQ = "UPDATE posts SET Status = ? WHERE PostID = ?";
+        db.query(updatePostQ, [finalStatus, PostID], (err4) => {
+          if (err4) return res.status(500).json(err4);
+          return res.status(200).json({ message: "Joined successfully!" });
         });
       });
     });
