@@ -120,17 +120,6 @@ app.post('/stores', checkAdmin, (req, res) => {
     });
 });
 
-/**
- * DELETE PRODUCT (ADMIN ONLY)
- */
-app.delete('/products/:id', checkAdmin, (req, res) => {
-    const q = "DELETE FROM Products WHERE ProductID = ?";
-
-    db.query(q, [req.params.id], (err, data) => {
-        if (err) return res.status(500).json(err);
-        return res.json("Product removed from catalog.");
-    });
-});
 
 /**
  * GET POSTS WITH JOINS
@@ -511,36 +500,62 @@ app.get('/locations', (req, res) => {
     });
 });
 
-/**
- * LOGIN ROUTE
- * Verifies user credentials and checks membership status
- */
 app.post("/login", (req, res) => {
   const { Email, Password } = req.body;
 
-  const q = `
-    SELECT u.UserID, u.FName, u.LName, u.Email, m.MembershipID 
+  // 1. Check regular users table
+  const userQuery = `
+    SELECT u.UserID, u.FName, u.LName, u.Email, u.PreferredSplitLocation, m.MembershipID 
     FROM users u
     LEFT JOIN membershipholders m ON u.UserID = m.UserID
     WHERE u.Email = ? AND u.Password = ?
   `;
 
-  db.query(q, [Email, Password], (err, data) => {
+  db.query(userQuery, [Email, Password], (err, userData) => {
     if (err) return res.status(500).json(err);
 
-    if (data.length > 0) {
-      const user = data[0];
-
-      // Convert DB result into frontend-friendly boolean
-      user.isMember = user.MembershipID ? true : false;
-
-      return res.status(200).json(user);
-    } else {
-      return res.status(401).json("Invalid email or password.");
+    // If a regular user is found
+    if (userData.length > 0) {
+      const user = userData[0];
+      return res.status(200).json({
+        UserID: user.UserID,
+        FName: user.FName,
+        LName: user.LName,
+        Email: user.Email,
+        PreferredLocation: user.PreferredSplitLocation,
+        Role: "User",
+        isMember: user.MembershipID ? true : false
+      });
     }
+
+    // 2. Waterfall: Check the administrators table using the Password column
+    const adminQuery = `
+      SELECT SSN, FName, LName, Email, Role 
+      FROM administrators 
+      WHERE Email = ? AND Password = ?
+    `;
+
+    db.query(adminQuery, [Email, Password], (err2, adminData) => {
+      if (err2) return res.status(500).json(err2);
+
+      // If an admin is found
+      if (adminData.length > 0) {
+        const admin = adminData[0];
+        return res.status(200).json({
+          UserID: admin.SSN, 
+          FName: admin.FName,
+          LName: admin.LName,
+          Email: admin.Email,
+          Role: admin.Role || "Admin",
+          isMember: false 
+        });
+      }
+
+      // 3. No match in either table
+      return res.status(401).json("Invalid email or password.");
+    });
   });
 });
-
 
 app.post("/signup", (req, res) => {
   const { FName, LName, Email, Password, PostalCode, hasMembership, MembershipStore, Expiry } = req.body;
@@ -581,5 +596,56 @@ app.post("/signup", (req, res) => {
         return res.status(201).json("Standard Account created!");
       }
     });
+  });
+});
+
+
+app.delete("/posts/:id", (req, res) => {
+  const postId = req.params.id;
+
+  const q = "DELETE FROM posts WHERE PostID = ?";
+
+  db.query(q, [postId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json(err);
+    }
+    return res.status(200).json("Post has been deleted.");
+  });
+});
+
+// Add a new product
+app.post("/products", (req, res) => {
+  const { ProductName, Brand, BulkSize, BulkAmount } = req.body;
+
+  // Simple query matching your columns: ProductID is handled by AUTO_INCREMENT
+  const q = "INSERT INTO products (ProductName, Brand, BulkSize, BulkAmount) VALUES (?, ?, ?, ?)";
+  
+  db.query(q, [ProductName, Brand, BulkSize, BulkAmount], (err, data) => {
+    if (err) {
+      console.error("DATABASE ERROR:", err); // Check your terminal if it fails!
+      return res.status(500).json(err);
+    }
+    return res.status(200).json("Product added successfully.");
+  });
+});
+
+app.delete("/products/:id", (req, res) => {
+  const productId = req.params.id;
+
+  
+  const q = "DELETE FROM products WHERE ProductID = ?";
+
+  db.query(q, [productId], (err, data) => {
+    if (err) {
+      // Logic for WholeSplit: Block delete if product is in a split request
+      if (err.errno === 1451) {
+        return res.status(500).json({ 
+          message: "Cannot delete: This product is currently part of an active split." 
+        });
+      }
+      return res.status(500).json(err);
+    }
+    return res.status(200).json("Product deleted successfully.");
   });
 });
