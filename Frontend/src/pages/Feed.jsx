@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-const API = "http://localhost:3000";
-
-export default function Feed() {
-  const [posts, setPosts]     = useState([]);
-  const [loading, setLoading] = useState(true);
+const Feed = () => {
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     // Fetches the data calculated by the SQL SUM/GROUP BY query in the backend

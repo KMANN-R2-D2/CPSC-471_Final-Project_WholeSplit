@@ -6,43 +6,35 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-const API = "http://localhost:3000";
-const DEMO_USER_ID = 113; // replace with real auth later
-
-export default function PickStore() {
+const PickStore = () => {
   const { postId } = useParams();
-  const navigate = useNavigate();
   const [stores, setStores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(null);
-  const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
 
   /**
    * FETCH STORES ON COMPONENT LOAD
    */
   useEffect(() => {
     axios
-      .get(`${API}/stores`)
-      .then(res => {
-        setStores(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching stores:", err);
-        setLoading(false);
-      });
+      .get("http://localhost:3000/stores")
+      .then(res => setStores(res.data))
+      .catch(err => console.error("Error fetching stores:", err));
   }, []);
 
   const handleStoreSelect = (storeId, storeName) => {
-    navigate(`/join-details/${postId}`, {
-      state: {
-        storeID: storeId,
-        storeName: storeName
-      }
-    });
-  };
+  // We need to know how many are left to set the slider max
+  // You can pass the remaining units here if you have them in state, 
+  // or just pass the store info and let JoinDetails handle the UI.
+  navigate(`/join-details/${postId}`, { 
+    state: { 
+      storeID: storeId, 
+      storeName: storeName 
+    } 
+  });
+};
+  
 
   return (
     <div
@@ -59,91 +51,65 @@ export default function PickStore() {
         Choose a Costco to proceed to quantity selection.
       </p>
 
-      {loading ? (
-        <p>Loading stores...</p>
-      ) : stores.length === 0 ? (
-        // ✅ EMPTY STATE ADDED HERE
-        <div
-          style={{
-            marginTop: "30px",
-            padding: "20px",
-            textAlign: "center",
-            backgroundColor: "#f9f9f9",
-            border: "1px solid #eee",
-            borderRadius: "6px",
-            color: "#7f8c8d"
-          }}
-        >
-          <p style={{ fontSize: "16px", marginBottom: "10px" }}>
-            No stores available right now.
-          </p>
-          <p style={{ fontSize: "14px" }}>
-            Please check back later or contact support if this seems wrong.
-          </p>
-        </div>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "20px"
-          }}
-        >
-          <thead>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "20px"
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              textAlign: "left",
+              borderBottom: "2px solid #eee",
+              color: "#666",
+              backgroundColor: "#f2f2f2"
+            }}
+          >
+            <th style={{ padding: "12px" }}>Store Name</th>
+            <th style={{ padding: "12px" }}>City</th>
+            <th style={{ padding: "12px" }}>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {stores.map((store, index) => (
             <tr
+              key={store.StoreID}
               style={{
-                textAlign: "left",
-                borderBottom: "2px solid #eee",
-                color: "#666",
-                backgroundColor: "#f2f2f2"
+                backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                borderBottom: "1px solid #eee"
               }}
             >
-              <th style={{ padding: "12px" }}>Store Name</th>
-              <th style={{ padding: "12px" }}>City</th>
-              <th style={{ padding: "12px" }}>Action</th>
+              <td style={{ padding: "12px", fontWeight: "600" }}>
+                {store.Name}
+              </td>
+              <td style={{ padding: "12px" }}>
+                {store.City}
+              </td>
+              <td style={{ padding: "12px" }}>
+                <button
+                  onClick={() => handleStoreSelect(store.StoreID, store.Name)}
+                  style={{
+                    backgroundColor: "#27ae60",
+                    color: "white",
+                    border: "none",
+                    padding: "8px 20px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontWeight: "bold"
+                  }}
+                >
+                  Confirm Location
+                </button>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {stores.map((store, index) => (
-              <tr
-                key={store.StoreID}
-                style={{
-                  backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
-                  borderBottom: "1px solid #eee"
-                }}
-              >
-                <td style={{ padding: "12px", fontWeight: "600" }}>
-                  {store.Name}
-                </td>
-                <td style={{ padding: "12px" }}>
-                  {store.City}
-                </td>
-                <td style={{ padding: "12px" }}>
-                  <button
-                    onClick={() =>
-                      handleStoreSelect(store.StoreID, store.Name)
-                    }
-                    style={{
-                      backgroundColor: "#27ae60",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 20px",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    Confirm Location
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default PickStore;
