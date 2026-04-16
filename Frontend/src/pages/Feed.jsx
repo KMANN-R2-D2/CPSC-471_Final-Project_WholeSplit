@@ -5,133 +5,228 @@ import { Link } from "react-router-dom";
 const Feed = () => {
   const [posts, setPosts] = useState([]);
 
+  // ======================================================
+  // FETCH FEED DATA FROM BACKEND
+  // ======================================================
   useEffect(() => {
-    // Fetches the data calculated by the SQL SUM/GROUP BY query in the backend
-    axios.get("http://localhost:3000/posts").then((res) => setPosts(res.data));
+    axios.get("http://localhost:3000/posts")
+      .then((res) => setPosts(res.data));
   }, []);
 
-  // Helper function to color-code statuses based on the logic in our /groups route
+  // ======================================================
+  // STATUS COLOR LOGIC
+  // ======================================================
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Full':
-        return { backgroundColor: '#e8f4fd', color: '#1a73e8' }; // Blue for completed split
-      case 'Fulfillment In Progress':
-        return { backgroundColor: '#d4edda', color: '#155724' }; // Green for member-verified
-      case 'Pending Member':
-        return { backgroundColor: '#fff3cd', color: '#856404' }; // Yellow for waiting for card
+      case "Full":
+        return { backgroundColor: "#e8f4fd", color: "#1a73e8" };
+      case "Fulfillment In Progress":
+        return { backgroundColor: "#d4edda", color: "#155724" };
+      case "Pending Member":
+        return { backgroundColor: "#fff3cd", color: "#856404" };
       default:
-        return { backgroundColor: '#f8d7da', color: '#721c24' }; // Red for Open/Default
+        return { backgroundColor: "#f8d7da", color: "#721c24" };
     }
   };
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Segoe UI, Tahoma, sans-serif" }}>
-      
-      {/* HEADER SECTION */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #3498db", paddingBottom: "10px" }}>
-        <h1 style={{ color: "#2c3e50", margin: 0 }}>Community Split Feed</h1>
+    <div style={pageStyle}>
+
+      {/* ======================================================
+          HEADER SECTION
+      ====================================================== */}
+      <div style={headerStyle}>
+        <h1 style={{ margin: 0, color: "#2c3e50" }}>
+          Community Split Feed
+        </h1>
+
         <Link to="/create-post">
-          <button style={{ backgroundColor: "#27ae60", color: "white", padding: "10px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+          <button style={newBtn}>
             + New Split Request
           </button>
         </Link>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px", textAlign: "left" }}>
-        <thead>
-          <tr style={{ borderBottom: "1px solid #ddd", color: "#7f8c8d", backgroundColor: "#f2f2f2" }}>
-            <th style={{ padding: "12px" }}>Product Name</th>
-            <th style={{ padding: "12px" }}>Progress</th>
-            <th style={{ padding: "12px" }}>Remaining</th>
-            <th style={{ padding: "12px" }}>Date Posted</th>
-            <th style={{ padding: "12px" }}>Status</th>
-            <th style={{ padding: "12px" }}>Action</th>
-          </tr>
-        </thead>
+      {/* ======================================================
+          FEED LIST (CARD LAYOUT)
+      ====================================================== */}
+      <div style={feedContainer}>
 
-        <tbody>
-          {posts.map((post, index) => {
-            // Logic: Calculate how much of the "offer" is still left
-            const claimed = post.UnitsClaimed || 0;
-            const remaining = Math.max(post.QuantityRequested - claimed, 0);
-            const progressPercent = Math.min((claimed / post.QuantityRequested) * 100, 100);
+        {posts.map((post) => {
+          const claimed = post.UnitsClaimed || 0;
+          const remaining = Math.max(post.QuantityRequested - claimed, 0);
+          const progressPercent = Math.min(
+            (claimed / post.QuantityRequested) * 100,
+            100
+          );
 
-            return (
-              <tr key={post.PostID} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#fafafa", borderBottom: "1px solid #eee" }}>
-                
-                {/* 1. PRODUCT */}
-                <td style={{ padding: "12px", fontWeight: "500" }}>{post.ProductName}</td>
+          return (
+            <div key={post.PostID} style={cardStyle}>
 
-                {/* 2. PROGRESS BAR (The "taken" vs "goal") */}
-                <td style={{ padding: "12px", minWidth: "160px" }}>
-                  <div style={{ fontSize: "11px", marginBottom: "4px", color: "#7f8c8d" }}>
-                    {claimed} / {post.QuantityRequested} Claimed
-                  </div>
-                  <div style={{ background: "#eee", borderRadius: "10px", height: "8px", width: "100%" }}>
-                    <div style={{ 
-                      width: `${progressPercent}%`, 
-                      background: progressPercent >= 100 ? "#27ae60" : "#3498db", 
-                      height: "100%", 
-                      borderRadius: "10px",
-                      transition: "width 0.6s ease-in-out"
-                    }}></div>
-                  </div>
-                </td>
+              {/* PRODUCT */}
+              <h3 style={productTitle}>
+                {post.ProductName}
+              </h3>
 
-                {/* 3. REMAINING (Your "Deduction" Logic) */}
-                <td style={{ padding: "12px" }}>
-                  <b style={{ color: remaining === 0 ? "#7f8c8d" : "#c0392b" }}>
-                    {remaining} units left
-                  </b>
-                </td>
+              {/* STATUS */}
+              <span style={{
+                ...statusBadge,
+                ...getStatusStyle(post.Status)
+              }}>
+                {post.Status}
+              </span>
 
-                {/* 4. DATE */}
-                <td style={{ padding: "12px", color: "#7f8c8d", fontSize: "14px" }}>
+              {/* PROGRESS */}
+              <div style={{ marginTop: "10px" }}>
+                <div style={progressText}>
+                  {claimed} / {post.QuantityRequested} claimed
+                </div>
+
+                <div style={progressBar}>
+                  <div
+                    style={{
+                      width: `${progressPercent}%`,
+                      backgroundColor:
+                        progressPercent >= 100 ? "#27ae60" : "#3498db",
+                      height: "100%",
+                      borderRadius: "10px"
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* INFO ROW */}
+              <div style={infoRow}>
+                <div>
+                  <b>{remaining}</b> units left
+                </div>
+
+                <div style={{ color: "#7f8c8d", fontSize: "13px" }}>
                   {new Date(post.DatePosted).toLocaleDateString()}
-                </td>
+                </div>
+              </div>
 
-                {/* 5. DYNAMIC STATUS LABEL */}
-                <td style={{ padding: "12px" }}>
-                  <span style={{
-                    padding: "5px 10px",
-                    borderRadius: "15px",
-                    fontSize: "11px",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    ...getStatusStyle(post.Status)
-                  }}>
-                    {post.Status}
-                  </span>
-                </td>
-
-                {/* 6. JOIN ACTION (Hidden if full) */}
-                <td style={{ padding: "12px" }}>
-                  {remaining > 0 ? (
-                    <Link to={`/create-group/${post.PostID}`}>
-                      <button style={{ 
-                        cursor: "pointer", 
-                        padding: "6px 12px", 
-                        backgroundColor: "#3498db", 
-                        color: "white", 
-                        border: "none", 
-                        borderRadius: "4px" 
-                      }}>
-                        Join Split
-                      </button>
-                    </Link>
-                  ) : (
-                    <button disabled style={{ padding: "6px 12px", backgroundColor: "#ccc", color: "#666", border: "none", borderRadius: "4px" }}>
-                      Closed
+              {/* ACTION */}
+              <div style={{ marginTop: "12px" }}>
+                {remaining > 0 ? (
+                  <Link to={`/create-group/${post.PostID}`}>
+                    <button style={joinBtn}>
+                      Join Split
                     </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </Link>
+                ) : (
+                  <button style={closedBtn} disabled>
+                    Closed
+                  </button>
+                )}
+              </div>
+
+            </div>
+          );
+        })}
+
+      </div>
     </div>
   );
+};
+
+/* ======================================================
+   STYLES
+   Mobile-first card design (works on desktop too)
+====================================================== */
+
+const pageStyle = {
+  padding: "20px",
+  fontFamily: "Segoe UI, sans-serif"
+};
+
+const headerStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  flexWrap: "wrap",
+  borderBottom: "2px solid #3498db",
+  paddingBottom: "12px",
+  gap: "10px"
+};
+
+const newBtn = {
+  backgroundColor: "#27ae60",
+  color: "white",
+  padding: "12px 18px",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer"
+};
+
+const feedContainer = {
+  marginTop: "20px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "15px"
+};
+
+const cardStyle = {
+  backgroundColor: "#fff",
+  border: "1px solid #eee",
+  borderRadius: "12px",
+  padding: "16px",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+};
+
+const productTitle = {
+  margin: "0 0 8px 0",
+  color: "#2c3e50"
+};
+
+const statusBadge = {
+  display: "inline-block",
+  padding: "5px 10px",
+  borderRadius: "15px",
+  fontSize: "11px",
+  fontWeight: "bold",
+  textTransform: "uppercase"
+};
+
+const progressText = {
+  fontSize: "12px",
+  color: "#7f8c8d",
+  marginBottom: "5px"
+};
+
+const progressBar = {
+  background: "#eee",
+  height: "8px",
+  borderRadius: "10px",
+  overflow: "hidden"
+};
+
+const infoRow = {
+  marginTop: "10px",
+  display: "flex",
+  justifyContent: "space-between",
+  fontSize: "14px"
+};
+
+const joinBtn = {
+  width: "100%",
+  padding: "12px",
+  backgroundColor: "#3498db",
+  color: "white",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer"
+};
+
+const closedBtn = {
+  width: "100%",
+  padding: "12px",
+  backgroundColor: "#ccc",
+  color: "#666",
+  border: "none",
+  borderRadius: "8px"
 };
 
 export default Feed;

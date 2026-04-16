@@ -2,9 +2,21 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const Users = () => {
+
+  // ======================================================
+  // STATE: user list
+  // ======================================================
   const [users, setUsers] = useState([]);
+
+  // ======================================================
+  // STATE: expanded profile
+  // stores currently opened user email
+  // ======================================================
   const [expandedEmail, setExpandedEmail] = useState(null);
 
+  // ======================================================
+  // FETCH USERS ON LOAD
+  // ======================================================
   useEffect(() => {
     axios.get("http://localhost:3000/users")
       .then(res => setUsers(res.data))
@@ -12,67 +24,188 @@ const Users = () => {
   }, []);
 
   return (
-    <div style={{ padding: "40px", backgroundColor: "#121212", minHeight: "100vh", color: "white", fontFamily: "Segoe UI" }}>
-      <h2 style={{ color: "#3498db", marginBottom: "20px" }}>Community Members</h2>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+    <div style={pageStyle}>
+
+      {/* ======================================================
+          PAGE TITLE
+      ====================================================== */}
+      <h2 style={titleStyle}>
+        Community Members
+      </h2>
+
+      <p style={subtitleStyle}>
+        Tap a user to view their profile
+      </p>
+
+      {/* ======================================================
+          USER LIST (CARD STYLE)
+      ====================================================== */}
+      <div style={listStyle}>
+
         {users.map((u, index) => (
-          <div key={index} style={{ border: "1px solid #333", borderRadius: "8px", backgroundColor: "#1e1e1e" }}>
-            
-            {/* NAME ROW */}
-            <div 
-              onClick={() => setExpandedEmail(expandedEmail === u.Email ? null : u.Email)}
-              style={{ padding: "15px 20px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+          <div key={index} style={cardStyle}>
+
+            {/* ======================================================
+                CLICKABLE HEADER ROW
+            ====================================================== */}
+            <div
+              onClick={() =>
+                setExpandedEmail(
+                  expandedEmail === u.Email ? null : u.Email
+                )
+              }
+              style={headerRow}
             >
-              <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>
-                {u.FName} {u.LName}
-              </span>
-              <span style={{ color: "#3498db", fontSize: "0.8rem" }}>
-                {expandedEmail === u.Email ? "CLOSE ▲" : "VIEW PROFILE ▼"}
-              </span>
-            </div>
 
-            {/* DROPDOWN DETAILS */}
-            {expandedEmail === u.Email && (
-              <div style={{ padding: "20px", backgroundColor: "#161616", borderTop: "1px solid #333" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                  
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <p style={dataStyle}>{u.Email}</p>
-                  </div>
+              <div>
+                <div style={nameStyle}>
+                  {u.FName} {u.LName}
+                </div>
 
-                  <div>
-                    <label style={labelStyle}>Location</label>
-                    <p style={dataStyle}>{u.PostalCode}</p>
-                  </div>
-
-            
-
-<div>
-  <label style={labelStyle}>Status</label>
-  <p style={{ 
-    margin: 0,
-    fontSize: "1rem",
-    // Logic: If MembershipID is truthy (not null), color it green
-    color: u.MembershipID ? '#27ae60' : '#f39c12',
-    fontWeight: "bold"
-  }}>
-    {u.MembershipID ? "Holder" : "Standard"}
-  </p>
-</div>
-
+                <div style={emailPreview}>
+                  {u.Email}
                 </div>
               </div>
+
+              <div style={toggleText}>
+                {expandedEmail === u.Email
+                  ? "Hide ▲"
+                  : "View ▼"}
+              </div>
+
+            </div>
+
+            {/* ======================================================
+                EXPANDED PROFILE SECTION
+            ====================================================== */}
+            {expandedEmail === u.Email && (
+              <div style={expandedBox}>
+
+                {/* EMAIL */}
+                <div style={infoBlock}>
+                  <div style={labelStyle}>Email</div>
+                  <div style={valueStyle}>{u.Email}</div>
+                </div>
+
+                {/* LOCATION */}
+                <div style={infoBlock}>
+                  <div style={labelStyle}>Location</div>
+                  <div style={valueStyle}>{u.PostalCode}</div>
+                </div>
+
+                {/* STATUS */}
+                <div style={infoBlock}>
+                  <div style={labelStyle}>Status</div>
+                  <div
+                    style={{
+                      ...valueStyle,
+                      fontWeight: "bold",
+                      color: u.MembershipID
+                        ? "#27ae60"
+                        : "#f39c12"
+                    }}
+                  >
+                    {u.MembershipID ? "Member" : "Standard"}
+                  </div>
+                </div>
+
+              </div>
             )}
+
           </div>
         ))}
+
       </div>
     </div>
   );
 };
 
-const labelStyle = { display: "block", fontSize: "0.7rem", color: "#666", textTransform: "uppercase", fontWeight: "bold", marginBottom: "5px" };
-const dataStyle = { margin: 0, fontSize: "1rem", color: "#ddd" };
+/* ======================================================
+   STYLES (unified light app system)
+====================================================== */
+
+const pageStyle = {
+  padding: "20px",
+  fontFamily: "Segoe UI, sans-serif",
+  backgroundColor: "#f5f7fa",
+  minHeight: "100vh"
+};
+
+const titleStyle = {
+  margin: "0",
+  color: "#2c3e50"
+};
+
+const subtitleStyle = {
+  marginTop: "6px",
+  marginBottom: "20px",
+  color: "#7f8c8d"
+};
+
+const listStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px"
+};
+
+const cardStyle = {
+  backgroundColor: "#fff",
+  borderRadius: "12px",
+  border: "1px solid #eee",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+  overflow: "hidden"
+};
+
+const headerRow = {
+  padding: "14px 16px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  cursor: "pointer"
+};
+
+const nameStyle = {
+  fontWeight: "bold",
+  color: "#2c3e50"
+};
+
+const emailPreview = {
+  fontSize: "12px",
+  color: "#7f8c8d",
+  marginTop: "2px"
+};
+
+const toggleText = {
+  fontSize: "12px",
+  color: "#3498db",
+  fontWeight: "bold"
+};
+
+const expandedBox = {
+  padding: "14px 16px",
+  borderTop: "1px solid #eee",
+  backgroundColor: "#f8fbff",
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px"
+};
+
+const infoBlock = {
+  display: "flex",
+  flexDirection: "column"
+};
+
+const labelStyle = {
+  fontSize: "11px",
+  color: "#7f8c8d",
+  textTransform: "uppercase",
+  fontWeight: "bold"
+};
+
+const valueStyle = {
+  fontSize: "14px",
+  color: "#2c3e50",
+  marginTop: "4px"
+};
 
 export default Users;

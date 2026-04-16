@@ -9,158 +9,185 @@
 // Lama Dev. (2022, September 18). React Node.js MySQL CRUD Tutorial for Beginners.
 // https://www.youtube.com/watch?v=fPuLnzSjPLE
 
-// Import React and useState hook for managing form input state
+// ======================================================
+// Login.jsx
+// Handles user authentication and session storage
+// ======================================================
+
 import React, { useState } from "react";
-
-// Axios is used to send HTTP requests to backend (login request)
 import axios from "axios";
-
-// useNavigate allows redirecting user after successful login
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
 
-  // State to store user input for email and password
+  // ======================================================
+  // FORM STATE (email + password)
+  // ======================================================
   const [credentials, setCredentials] = useState({
     Email: "",
     Password: ""
   });
 
-  // Hook used for navigation after login success
   const navigate = useNavigate();
 
-  // Debug log to confirm component renders correctly in browser console
   console.log("Login component rendered");
 
-  /**
-   * Handles input changes for both email and password fields
-   * Uses "name" attribute to dynamically update correct field
-   */
+  // ======================================================
+  // HANDLE INPUT CHANGE
+  // Dynamically updates Email or Password field
+  // ======================================================
   const handleChange = (e) => {
-    setCredentials((prev) => ({
+    setCredentials(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
 
-  /**
-   * Handles login form submission
-   * Sends credentials to backend /login route
-   */
+  // ======================================================
+  // HANDLE LOGIN REQUEST
+  // Sends credentials to backend and stores user session
+  // ======================================================
   const handleLogin = async (e) => {
-    e.preventDefault(); // prevent page reload
+    e.preventDefault();
 
     try {
-      // Send login request to backend API
       const res = await axios.post(
         "http://localhost:3000/login",
         credentials
       );
 
-      // Store returned user data in localStorage for session persistence
       localStorage.setItem("user", JSON.stringify(res.data));
 
-      // Welcome message using first name from backend response
       alert(`Welcome back, ${res.data.FName}!`);
 
-      // Redirect user to homepage
       navigate("/");
-
-      // Force page refresh so navbar / auth state updates immediately
       window.location.reload();
-    } 
-    catch (err) {
+
+    } catch (err) {
       console.error(err);
       alert("Login failed. Check your email/password.");
     }
   };
 
   return (
-    <div
-      style={{
-        padding: "100px",
-        textAlign: "center",
-        fontFamily: "Segoe UI"
-      }}
-    >
+    <div style={pageStyle}>
 
-      {/* Login form container */}
-      <div
-        style={{
-          maxWidth: "400px",
-          margin: "auto",
-          border: "1px solid #ddd",
-          padding: "30px",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-        }}
-      >
-        {/* Page title */}
-        <h2 style={{ color: "#2c3e50" }}>
+      {/* ======================================================
+          LOGIN CARD
+      ====================================================== */}
+      <div style={cardStyle}>
+
+        {/* TITLE */}
+        <h2 style={titleStyle}>
           WholeSplit Login
         </h2>
 
-        {/* LOGIN FORM */}
-        <form
-          onSubmit={handleLogin}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "15px",
-            marginTop: "20px"
-          }}
-        >
+        {/* SUBTITLE */}
+        <p style={subtitleStyle}>
+          Sign in to continue splitting with your community
+        </p>
 
-          {/* Email input field */}
+        {/* FORM */}
+        <form onSubmit={handleLogin} style={formStyle}>
+
+          {/* EMAIL */}
           <input
             type="email"
             name="Email"
             placeholder="Email Address"
             onChange={handleChange}
             required
-            style={{
-              padding: "12px",
-              borderRadius: "4px",
-              border: "1px solid #ccc"
-            }}
+            style={inputStyle}
           />
 
-          {/* Password input field */}
+          {/* PASSWORD */}
           <input
             type="password"
             name="Password"
             placeholder="Password"
             onChange={handleChange}
             required
-            style={{
-              padding: "12px",
-              borderRadius: "4px",
-              border: "1px solid #ccc"
-            }}
+            style={inputStyle}
           />
 
-          {/* Submit button */}
-          <button
-            type="submit"
-            style={{
-              backgroundColor: "#3498db",
-              color: "white",
-              padding: "12px",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontWeight: "bold"
-            }}
-          >
+          {/* LOGIN BUTTON */}
+          <button type="submit" style={buttonStyle}>
             Login
           </button>
 
         </form>
-        {/* END FORM */}
+
       </div>
     </div>
   );
 };
 
-// Export component so it can be used in routing
+/* ======================================================
+   STYLES (mobile-first app login design)
+====================================================== */
+
+// Page background (centers login card)
+const pageStyle = {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: "20px",
+  fontFamily: "Segoe UI, sans-serif",
+  backgroundColor: "#f5f7fa"
+};
+
+// Login card container
+const cardStyle = {
+  width: "100%",
+  maxWidth: "420px",
+  backgroundColor: "#fff",
+  padding: "28px",
+  borderRadius: "14px",
+  boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+  textAlign: "center"
+};
+
+// Title
+const titleStyle = {
+  marginBottom: "8px",
+  color: "#2c3e50"
+};
+
+// Subtitle
+const subtitleStyle = {
+  marginBottom: "20px",
+  color: "#7f8c8d",
+  fontSize: "0.95rem"
+};
+
+// Form layout
+const formStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px"
+};
+
+// Inputs
+const inputStyle = {
+  padding: "12px",
+  borderRadius: "8px",
+  border: "1px solid #ddd",
+  fontSize: "1rem",
+  outline: "none"
+};
+
+// Login button
+const buttonStyle = {
+  marginTop: "10px",
+  backgroundColor: "#3498db",
+  color: "white",
+  padding: "12px",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer",
+  fontSize: "1rem"
+};
+
 export default Login;
