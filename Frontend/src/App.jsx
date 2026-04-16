@@ -1,22 +1,15 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Feed from "./pages/Feed";
+import PickStore from "./pages/PickStore";
 
-import Users from "./pages/users";
-
-function App(){
+function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
-          <Route path="/users" element={<Users />} />
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Feed />} />
+        <Route path="/create-group/:postId" element={<PickStore />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
 export default App;
