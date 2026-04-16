@@ -11,6 +11,16 @@ import Users from "./pages/users";
 import JoinDetails from "./pages/JoinDetails";
 
 
+function Navbar() {
+  return (
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <span className="navbar-brand">WholeSplit</span>
+      </div>
+    </nav>
+  );
+}
+
 function App() {
   return (
     // 2. The Browser Router MUST be the outermost layer
