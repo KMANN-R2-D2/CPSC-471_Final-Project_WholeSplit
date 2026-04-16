@@ -234,7 +234,7 @@ app.post("/groups", (req, res) => {
 
         const newTotalTaken = parseInt(TotalTaken) + parseInt(QuantityTaken);
         let finalStatus = (newTotalTaken >= QuantityRequested) ? "Full" : 
-                          (members.length > 0 ? "Fulfillment In Progress" : "Pending Member");
+                          (members.length > 0 ? "Fulfillment In Progress" : "Member Required");
 
         const updatePostQ = "UPDATE posts SET Status = ? WHERE PostID = ?";
         db.query(updatePostQ, [finalStatus, PostID], (err4) => {
@@ -558,11 +558,19 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
-  const { FName, LName, Email, Password, PostalCode, hasMembership, MembershipStore, Expiry } = req.body;
+  const { 
+    FName, 
+    LName, 
+    Email, 
+    Password, 
+    PostalCode, 
+    hasMembership, 
+    MembershipStore, 
+    Expiry 
+  } = req.body;
 
   // STEP 1: Handle the Location Constraint
-  // "INSERT IGNORE" adds the postal code if it's new, or does nothing if it exists.
-  // This satisfies the Foreign Key requirement for the users table.
+  // Ensures the PostalCode exists in the locations table before the user is created.
   const locQ = "INSERT IGNORE INTO locations (PostalCode, City, Province) VALUES (?, 'Calgary', 'AB')";
   
   db.query(locQ, [PostalCode], (err) => {
@@ -582,9 +590,11 @@ app.post("/signup", (req, res) => {
       
       const newUserID = result.insertId;
 
-      // STEP 3: Handle Inheritance (MembershipHolder)
+      // STEP 3: Handle Inheritance (MembershipHolder subtype)
       if (hasMembership) {
+        // We do NOT provide MembershipID here because it is now set to AUTO_INCREMENT
         const memberQ = `INSERT INTO membershipholders (UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?)`;
+        
         db.query(memberQ, [newUserID, MembershipStore, Expiry], (err3) => {
           if (err3) {
             console.error("Membership Error:", err3);
@@ -593,12 +603,12 @@ app.post("/signup", (req, res) => {
           return res.status(201).json("Account and Membership created!");
         });
       } else {
+        // Standard User path
         return res.status(201).json("Standard Account created!");
       }
     });
   });
 });
-
 
 app.delete("/posts/:id", (req, res) => {
   const postId = req.params.id;
