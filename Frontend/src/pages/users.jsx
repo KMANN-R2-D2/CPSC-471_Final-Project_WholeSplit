@@ -1,83 +1,78 @@
-// The following resources were used to create this file and in general the whole of the frontend:
-
-// Ramesh Fadatare (Java Guides). (n.d.). Spring Boot React JS Full-Stack Project | Employee Management System.
-// https://www.youtube.com/watch?v=KuM6OtuaYRs
-
-// Lama Dev. (2022, September 18). React Node.js MySQL CRUD Tutorial for Beginners.
-// https://www.youtube.com/watch?v=fPuLnzSjPLE
-
-// Import React library
-import React from 'react';
-
-// useEffect is used to run code when component loads (fetch data on mount)
-import { useEffect } from 'react';
-
-// Axios is used to send HTTP requests to backend API
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Users = () => {
+  const [users, setUsers] = useState([]);
+  const [expandedEmail, setExpandedEmail] = useState(null);
 
-    // State to store list of users fetched from backend
-    const [users, setUsers] = React.useState([]);
+  useEffect(() => {
+    axios.get("http://localhost:3000/users")
+      .then(res => setUsers(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
-    /**
-     * useEffect runs once when component mounts
-     * It fetches all users from backend API
-     */
-    useEffect(() => {
-
-        // Async function to fetch user data
-        const fetchUsers = async () => {
-            try {
-                // GET request to backend /users route
-                const res = await axios.get('http://localhost:3000/users');
-
-                // Store response data in state
-                setUsers(res.data);
-
-                // Debug log to inspect API response in console
-                console.log(res);
-            } 
-            catch (err) {
-                // Error handling for failed API request
-                console.log(err);
-            }
-        };
-
-        // Call async function
-        fetchUsers();
-
-    }, []);
-
-    return (
-        <div>
-
-            {/* Page title */}
-            <h1>WholeSplit Users</h1>
-
-            {/* Users container */}
-            <div className="Users">
-
-                {/* Loop through users and render each one */}
-                {users.map((user) => (
-                    <div key={user.UserID}>
-
-                        {/* Basic user identity info */}
-                        {user.FName} {user.LName} - {user.Email}
-
-                        {/* User preference details */}
-                        <h2>{user.PreferredPaymentMethod}</h2>
-                        <h2>{user.PreferredShoppingDay}</h2>
-                        <h2>{user.PreferredSplitLocation}</h2>
-                        <h2>{user.PostalCode}</h2>
-
-                    </div>
-                ))}
-
+  return (
+    <div style={{ padding: "40px", backgroundColor: "#121212", minHeight: "100vh", color: "white", fontFamily: "Segoe UI" }}>
+      <h2 style={{ color: "#3498db", marginBottom: "20px" }}>Community Members</h2>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {users.map((u, index) => (
+          <div key={index} style={{ border: "1px solid #333", borderRadius: "8px", backgroundColor: "#1e1e1e" }}>
+            
+            {/* NAME ROW */}
+            <div 
+              onClick={() => setExpandedEmail(expandedEmail === u.Email ? null : u.Email)}
+              style={{ padding: "15px 20px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>
+                {u.FName} {u.LName}
+              </span>
+              <span style={{ color: "#3498db", fontSize: "0.8rem" }}>
+                {expandedEmail === u.Email ? "CLOSE ▲" : "VIEW PROFILE ▼"}
+              </span>
             </div>
-        </div>
-    );
+
+            {/* DROPDOWN DETAILS */}
+            {expandedEmail === u.Email && (
+              <div style={{ padding: "20px", backgroundColor: "#161616", borderTop: "1px solid #333" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  
+                  <div>
+                    <label style={labelStyle}>Email</label>
+                    <p style={dataStyle}>{u.Email}</p>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Location</label>
+                    <p style={dataStyle}>{u.PostalCode}</p>
+                  </div>
+
+            
+
+<div>
+  <label style={labelStyle}>Status</label>
+  <p style={{ 
+    margin: 0,
+    fontSize: "1rem",
+    // Logic: If MembershipID is truthy (not null), color it green
+    color: u.MembershipID ? '#27ae60' : '#f39c12',
+    fontWeight: "bold"
+  }}>
+    {u.MembershipID ? "Holder" : "Standard"}
+  </p>
+</div>
+
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
-// Export component so it can be used in routing
+const labelStyle = { display: "block", fontSize: "0.7rem", color: "#666", textTransform: "uppercase", fontWeight: "bold", marginBottom: "5px" };
+const dataStyle = { margin: 0, fontSize: "1rem", color: "#ddd" };
+
 export default Users;

@@ -56,6 +56,11 @@ const PickStore = () => {
       return;
     }
 
+    if (!postId) {
+    alert("Error: Post ID not found.");
+    return;
+  }
+
     try {
       /**
        * Send request to backend to create group
@@ -64,7 +69,7 @@ const PickStore = () => {
        * - current logged-in user
        * - post being joined
        */
-      await axios.post("http://localhost:3000/groups", {
+      const res = await axios.post("http://localhost:3000/groups", {
         StoreID: storeId,
         ResponderUserID: currentUserID,
         PostID: postId
@@ -77,7 +82,9 @@ const PickStore = () => {
     } 
     catch (err) {
       // Handles backend errors (e.g. not a member, server issues, etc.)
-      alert(err.response?.data || "Error joining split");
+      const errorMsg = err.response?.data?.message || err.message || "Unknown Error";
+      console.error("Join Error Details:", err.response?.data);
+      alert("Failed to join: " + errorMsg);
     }
   };
 
