@@ -6,18 +6,12 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-const API = "http://localhost:3000";
-const DEMO_USER_ID = 113; // replace with real auth later
-
-export default function PickStore() {
-  const { postId }      = useParams();
-  const navigate        = useNavigate();
-  const [stores, setStores]   = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(null); // storeId being processed
-  const [toast, setToast]     = useState(null);
+const PickStore = () => {
+  const { postId } = useParams();
+  const [stores, setStores] = useState([]);
+  const navigate = useNavigate();
 
   /**
    * FETCH STORES ON COMPONENT LOAD
@@ -112,10 +106,10 @@ export default function PickStore() {
               </td>
             </tr>
           ))}
-        </div>
-      )}
-
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default PickStore;
