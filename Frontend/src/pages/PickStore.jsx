@@ -13,22 +13,26 @@ const PickStore = () => {
   }, []);
 
   const handleJoin = async (storeId) => {
+  // 1. Get the logged-in user
+  const user = JSON.parse(localStorage.getItem("user"));
+  const currentUserID = user ? user.UserID : null;
+
+  if (!currentUserID) {
+    alert("You must be logged in to join a split!");
+    return;
+  }
+
   try {
-    // 1. Send data to backend
-    const res = await axios.post("http://localhost:3000/groups", {
+    await axios.post("http://localhost:3000/groups", {
       StoreID: storeId,
-      ResponderUserID: 113, // hardcoded for demo; replace with actual logged-in user ID in production
+      ResponderUserID: currentUserID,
       PostID: postId
     });
-
-    // 2. VISUAL FEEDBACK: This runs only if the backend succeeds
-    if (res.status === 200) {
-      alert("Success! You've joined the split.");
-      navigate("/"); // This physically moves the user back to the main list
-    }
+    alert("Success!");
+    navigate("/");
   } catch (err) {
-    console.error("Group creation failed:", err);
-    alert("Error: Could not join split. Check your backend terminal.");
+    // This will now catch the 403 error if the logged-in user isn't a member
+    alert(err.response?.data || "Error joining split");
   }
 };
 
