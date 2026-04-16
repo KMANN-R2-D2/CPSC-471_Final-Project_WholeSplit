@@ -9,68 +9,132 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API}/posts`)
-      .then(r => setPosts(r.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    // Fetches the data calculated by the SQL SUM/GROUP BY query in the backend
+    axios.get("http://localhost:3000/posts").then((res) => setPosts(res.data));
   }, []);
 
-  if (loading) return <div className="loading">Loading splits…</div>;
+  // Helper function to color-code statuses based on the logic in our /groups route
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'Full':
+        return { backgroundColor: '#e8f4fd', color: '#1a73e8' }; // Blue for completed split
+      case 'Fulfillment In Progress':
+        return { backgroundColor: '#d4edda', color: '#155724' }; // Green for member-verified
+      case 'Pending Member':
+        return { backgroundColor: '#fff3cd', color: '#856404' }; // Yellow for waiting for card
+      default:
+        return { backgroundColor: '#f8d7da', color: '#721c24' }; // Red for Open/Default
+    }
+  };
 
   return (
-    <div className="page fade-up">
-      <div className="page-header">
-        <div>
-          <h1>Community Splits</h1>
-          <p className="page-subtitle">{posts.length} open bulk-buy opportunities near you</p>
-        </div>
+    <div style={{ padding: "40px", fontFamily: "Segoe UI, Tahoma, sans-serif" }}>
+      
+      {/* HEADER SECTION */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #3498db", paddingBottom: "10px" }}>
+        <h1 style={{ color: "#2c3e50", margin: 0 }}>Community Split Feed</h1>
+        <Link to="/create-post">
+          <button style={{ backgroundColor: "#27ae60", color: "white", padding: "10px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+            + New Split Request
+          </button>
+        </Link>
       </div>
 
-      {posts.length === 0 ? (
-        <div className="empty-state">
-          <h3>No open splits right now</h3>
-          <p>Check back soon — new posts appear as members share bulk finds.</p>
-        </div>
-      ) : (
-        <div className="ws-table-wrap">
-          <table className="ws-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Posted by</th>
-                <th>Qty</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map(post => (
-                <tr key={post.PostID}>
-                  <td style={{ fontWeight: 600 }}>{post.ProductName}</td>
-                  <td>{post.FName}</td>
-                  <td>{post.QuantityRequested ?? post.QuantityRequired}</td>
-                  <td style={{ color: "var(--text)" }}>
-                    {new Date(post.DatePosted).toLocaleDateString("en-CA", {
-                      month: "short", day: "numeric", year: "numeric"
-                    })}
-                  </td>
-                  <td>
-                    <span className={`badge ${post.Status === "Open" ? "badge-green" : "badge-amber"}`}>
-                      {post.Status}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px", textAlign: "left" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #ddd", color: "#7f8c8d", backgroundColor: "#f2f2f2" }}>
+            <th style={{ padding: "12px" }}>Product Name</th>
+            <th style={{ padding: "12px" }}>Progress</th>
+            <th style={{ padding: "12px" }}>Remaining</th>
+            <th style={{ padding: "12px" }}>Date Posted</th>
+            <th style={{ padding: "12px" }}>Status</th>
+            <th style={{ padding: "12px" }}>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {posts.map((post, index) => {
+            // Logic: Calculate how much of the "offer" is still left
+            const claimed = post.UnitsClaimed || 0;
+            const remaining = Math.max(post.QuantityRequested - claimed, 0);
+            const progressPercent = Math.min((claimed / post.QuantityRequested) * 100, 100);
+
+            return (
+              <tr key={post.PostID} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#fafafa", borderBottom: "1px solid #eee" }}>
+                
+                {/* 1. PRODUCT */}
+                <td style={{ padding: "12px", fontWeight: "500" }}>{post.ProductName}</td>
+
+                {/* 2. PROGRESS BAR (The "taken" vs "goal") */}
+                <td style={{ padding: "12px", minWidth: "160px" }}>
+                  <div style={{ fontSize: "11px", marginBottom: "4px", color: "#7f8c8d" }}>
+                    {claimed} / {post.QuantityRequested} Claimed
+                  </div>
+                  <div style={{ background: "#eee", borderRadius: "10px", height: "8px", width: "100%" }}>
+                    <div style={{ 
+                      width: `${progressPercent}%`, 
+                      background: progressPercent >= 100 ? "#27ae60" : "#3498db", 
+                      height: "100%", 
+                      borderRadius: "10px",
+                      transition: "width 0.6s ease-in-out"
+                    }}></div>
+                  </div>
+                </td>
+
+                {/* 3. REMAINING (Your "Deduction" Logic) */}
+                <td style={{ padding: "12px" }}>
+                  <b style={{ color: remaining === 0 ? "#7f8c8d" : "#c0392b" }}>
+                    {remaining} units left
+                  </b>
+                </td>
+
+                {/* 4. DATE */}
+                <td style={{ padding: "12px", color: "#7f8c8d", fontSize: "14px" }}>
+                  {new Date(post.DatePosted).toLocaleDateString()}
+                </td>
+
+                {/* 5. DYNAMIC STATUS LABEL */}
+                <td style={{ padding: "12px" }}>
+                  <span style={{
+                    padding: "5px 10px",
+                    borderRadius: "15px",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                    ...getStatusStyle(post.Status)
+                  }}>
+                    {post.Status}
+                  </span>
+                </td>
+
+                {/* 6. JOIN ACTION (Hidden if full) */}
+                <td style={{ padding: "12px" }}>
+                  {remaining > 0 ? (
                     <Link to={`/create-group/${post.PostID}`}>
-                      <button className="btn btn-primary btn-sm">Join Split →</button>
+                      <button style={{ 
+                        cursor: "pointer", 
+                        padding: "6px 12px", 
+                        backgroundColor: "#3498db", 
+                        color: "white", 
+                        border: "none", 
+                        borderRadius: "4px" 
+                      }}>
+                        Join Split
+                      </button>
                     </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  ) : (
+                    <button disabled style={{ padding: "6px 12px", backgroundColor: "#ccc", color: "#666", border: "none", borderRadius: "4px" }}>
+                      Closed
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default Feed;

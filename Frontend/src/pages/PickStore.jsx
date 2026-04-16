@@ -1,4 +1,10 @@
-import { useEffect, useState } from "react";
+// The following resources were used to create this file and in general the whole of the frontend:
+// Ramesh Fadatare (Java Guides). (2024, February 13). Spring Boot React JS Full-Stack Project | Employee Management System.
+// https://www.youtube.com/watch?v=KuM6OtuaYRs
+// Lama Dev. (2022, September 18). React Node.js MySQL CRUD Tutorial for Beginners.
+// https://www.youtube.com/watch?v=fPuLnzSjPLE
+
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
@@ -13,81 +19,98 @@ export default function PickStore() {
   const [joining, setJoining] = useState(null); // storeId being processed
   const [toast, setToast]     = useState(null);
 
+  /**
+   * FETCH STORES ON COMPONENT LOAD
+   */
   useEffect(() => {
-    axios.get(`${API}/stores`)
-      .then(r => setStores(r.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    axios
+      .get("http://localhost:3000/stores")
+      .then(res => setStores(res.data))
+      .catch(err => console.error("Error fetching stores:", err));
   }, []);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleJoin = async (storeId) => {
-    setJoining(storeId);
-    try {
-      const res = await axios.post(`${API}/groups`, {
-        StoreID: storeId,
-        CreatorUserID: DEMO_USER_ID,
-        PostID: postId,
-      });
-      if (res.status === 200 || res.status === 201) {
-        showToast("You've joined the split!");
-        setTimeout(() => navigate("/"), 1500);
-      }
-    } catch (err) {
-      console.error(err);
-      showToast("Could not join — check your backend.", "error");
-    } finally {
-      setJoining(null);
-    }
-  };
+  const handleStoreSelect = (storeId, storeName) => {
+  // We need to know how many are left to set the slider max
+  // You can pass the remaining units here if you have them in state, 
+  // or just pass the store info and let JoinDetails handle the UI.
+  navigate(`/join-details/${postId}`, { 
+    state: { 
+      storeID: storeId, 
+      storeName: storeName 
+    } 
+  });
+};
+  
 
   return (
-    <div className="page fade-up">
-      <Link to="/" className="back-link">← Back to splits</Link>
+    <div
+      style={{
+        padding: "40px",
+        fontFamily: "Segoe UI, Tahoma, sans-serif"
+      }}
+    >
+      <h2 style={{ color: "#2c3e50" }}>
+        Select a Location for Split #{postId}
+      </h2>
 
-      <div className="page-header">
-        <div>
-          <h1>Choose a Location</h1>
-          <p className="page-subtitle">
-            Selecting a store for Split&nbsp;
-            <span style={{ fontFamily: "'Playfair Display', serif", color: "var(--text-h)" }}>
-              #{postId}
-            </span>
-          </p>
-        </div>
-      </div>
+      <p style={{ color: "#7f8c8d" }}>
+        Choose a Costco to proceed to quantity selection.
+      </p>
 
-      {loading ? (
-        <div className="loading">Loading stores…</div>
-      ) : stores.length === 0 ? (
-        <div className="empty-state">
-          <h3>No stores available</h3>
-          <p>No participating locations found.</p>
-        </div>
-      ) : (
-        <div className="store-grid">
-          {stores.map(store => (
-            <div className="store-card" key={store.StoreID}>
-              <div>
-                <div className="store-name">{store.Name}</div>
-                <div className="store-city">{store.City}</div>
-                {store.Street && (
-                  <div style={{ fontSize: "0.82rem", color: "var(--text)", marginTop: 3 }}>{store.Street}</div>
-                )}
-              </div>
-              <button
-                className="btn btn-primary btn-sm"
-                style={{ alignSelf: "flex-start", marginTop: 4 }}
-                disabled={joining === store.StoreID}
-                onClick={() => handleJoin(store.StoreID)}
-              >
-                {joining === store.StoreID ? "Joining…" : "Confirm Location"}
-              </button>
-            </div>
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "20px"
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              textAlign: "left",
+              borderBottom: "2px solid #eee",
+              color: "#666",
+              backgroundColor: "#f2f2f2"
+            }}
+          >
+            <th style={{ padding: "12px" }}>Store Name</th>
+            <th style={{ padding: "12px" }}>City</th>
+            <th style={{ padding: "12px" }}>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {stores.map((store, index) => (
+            <tr
+              key={store.StoreID}
+              style={{
+                backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
+                borderBottom: "1px solid #eee"
+              }}
+            >
+              <td style={{ padding: "12px", fontWeight: "600" }}>
+                {store.Name}
+              </td>
+              <td style={{ padding: "12px" }}>
+                {store.City}
+              </td>
+              <td style={{ padding: "12px" }}>
+                <button
+                  onClick={() => handleStoreSelect(store.StoreID, store.Name)}
+                  style={{
+                    backgroundColor: "#27ae60",
+                    color: "white",
+                    border: "none",
+                    padding: "8px 20px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontWeight: "bold"
+                  }}
+                >
+                  Confirm Location
+                </button>
+              </td>
+            </tr>
           ))}
         </div>
       )}

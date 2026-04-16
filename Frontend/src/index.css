@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Figtree:wght@300;400;500;600&display=swap');
+/* The following resources were used to create this file and in general the whole of the backend:
+
+Dek, S. (2019, June 18). Learn how to build a website using HTML, CSS, PHP, & MySQL. Medium. https://medium.com/@sapphdek/learn-how-to-build-a-website-using-html-css-php-mysql-af385524a5d6
+
+Lama Dev. (2022, September 18). React Node.js MySQL CRUD Tutorial for Beginners. YouTube. https://www.youtube.com/watch?v=fPuLnzSjPLE.
+
+Elam, A. (n.d.). Displaying database content on a web page using HTML, CSS and JavaScript. Codementor. https://www.codementor.io/@anthonyelam/displaying-database-content-on-a-web-page-using-html-css-and-javascript-2ejhvtl4cd
+*/ 
 
 :root {
   --bg:         #f7f5f2;
