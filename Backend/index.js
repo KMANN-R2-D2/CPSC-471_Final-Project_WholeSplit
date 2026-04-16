@@ -58,45 +58,6 @@ app.get('/', (req, res) => {
     res.json('Hello, backend running!');
 });
 
-/**
- * GET ALL USERS
- * Retrieves every row from "users" table
- */
-app.get('/users', (req, res) => {
-    db.query('SELECT * FROM users', (err, data) => {
-        if (err) return res.json(err);
-        res.json(data);
-    });
-});
-
-/**
- * CREATE NEW USER
- * Inserts a new user into the database using values from request body
- */
-app.post('/users', (req, res) => {
-    const q = `
-        INSERT INTO users 
-        (UserID, FName, LName, Email, PreferredPaymentMethod, PreferredShoppingDay, PreferredSplitLocation, PostalCode) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    // Values are mapped from frontend request body
-    const values = [
-        req.body.UserID,
-        req.body.FName,
-        req.body.LName,
-        req.body.Email,
-        req.body.PreferredPaymentMethod,
-        req.body.PreferredShoppingDay,
-        req.body.PreferredSplitLocation,
-        req.body.PostalCode
-    ];
-
-    db.query(q, values, (err, data) => {
-        if (err) return res.json(err);
-        res.json("User has been created successfully");
-    });
-});
 
 /**
  * START SERVER
@@ -223,38 +184,38 @@ app.post('/posts', (req, res) => {
     });
 });
 
-/**
- * CREATE GROUP WITH VALIDATION
- * Ensures user is a membership holder before group creation
- */
 app.post("/groups", (req, res) => {
   const { StoreID, ResponderUserID, PostID } = req.body;
 
-  const checkMemberQ = "SELECT * FROM membershipholders WHERE UserID = ?";
+  // 1. Add the user to the group first
+  const joinQ = `INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID, PostID) VALUES (?, NOW(), ?, ?, ?)`;
 
-  db.query(checkMemberQ, [ResponderUserID], (err, data) => {
+  db.query(joinQ, ['Active', StoreID, ResponderUserID, PostID], (err) => {
     if (err) return res.status(500).json(err);
 
-    // Reject if user is not a member
-    if (data.length === 0) {
-      return res.status(403).json("Access Denied: You aren't in the MembershipHolders table!");
-    }
-
-    // Create group if membership check passes
-    const createGroupQ = `
-      INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID) 
-      VALUES ('Active', NOW(), ?, ?)
+    // 2. CHECK: Does this group now contain AT LEAST ONE membership holder?
+    const checkGroupMemberQ = `
+      SELECT m.MembershipID 
+      FROM splitgroups sg
+      JOIN membershipholders m ON sg.CreatorUserID = m.UserID
+      WHERE sg.PostID = ?
     `;
 
-    db.query(createGroupQ, [StoreID, ResponderUserID], (err, result) => {
-      if (err) return res.status(500).json(err);
+    db.query(checkGroupMemberQ, [PostID], (err2, members) => {
+      if (err2) return res.status(500).json(err2);
 
-      // Update post status after group creation
-      const updatePostQ = "UPDATE posts SET Status = 'Pending' WHERE PostID = ?";
-      db.query(updatePostQ, [PostID], (err) => {
-        if (err) return res.status(500).json(err);
+      // 3. STATUS LOGIC: 
+      // If the list of members found is > 0, someone in the group has a card!
+      const finalStatus = members.length > 0 ? "Fulfillment In Progress" : "Pending Member";
 
-        return res.status(200).json("Success: Group created by verified member.");
+      const updatePostQ = "UPDATE posts SET Status = ? WHERE PostID = ?";
+      db.query(updatePostQ, [finalStatus, PostID], (err3) => {
+        if (err3) return res.status(500).json(err3);
+        
+        return res.status(200).json({ 
+          message: "Successfully joined the group!",
+          currentStatus: finalStatus 
+        });
       });
     });
   });
@@ -302,6 +263,50 @@ app.get('/admins', (req, res) => {
         res.json(data);
     });
 });
+
+app.get("/users", (req, res) => {
+  
+  const q = `
+    SELECT u.FName, u.LName, u.Email, u.PostalCode, m.MembershipID
+    FROM users u
+    LEFT JOIN membershipholders m ON u.UserID = m.UserID
+  `;
+    
+  db.query(q, (err, data) => {
+    if (err) {
+      console.error("SQL Error:", err); // This will show the error in your terminal
+      return res.status(500).json(err);
+    }
+    console.log("Data sent to frontend:", data); // Check your terminal to see if John is here!
+    return res.json(data);
+  });
+});
+/**
+ * CREATE NEW USER
+ */
+app.post('/users', (req, res) => {
+    const q = `
+        INSERT INTO users 
+        (FName, LName, Email, PreferredPaymentMethod, PreferredShoppingDay, PreferredSplitLocation, PostalCode) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+      req.body.FName, 
+      req.body.LName, 
+      req.body.Email, 
+      req.body.PreferredPaymentMethod, 
+      req.body.PreferredShoppingDay, 
+      req.body.PreferredSplitLocation, 
+      req.body.PostalCode
+    ];
+
+    db.query(q, values, (err, data) => {
+        if (err) return res.status(500).json(err);
+        return res.json("User created successfully");
+    });
+});
+
+
 
 /**
  * CREATE PAYMENT TRANSACTION
@@ -497,5 +502,48 @@ app.post("/login", (req, res) => {
     } else {
       return res.status(401).json("Invalid email or password.");
     }
+  });
+});
+
+
+app.post("/signup", (req, res) => {
+  const { FName, LName, Email, Password, PostalCode, hasMembership, MembershipStore, Expiry } = req.body;
+
+  // STEP 1: Handle the Location Constraint
+  // "INSERT IGNORE" adds the postal code if it's new, or does nothing if it exists.
+  // This satisfies the Foreign Key requirement for the users table.
+  const locQ = "INSERT IGNORE INTO locations (PostalCode, City, Province) VALUES (?, 'Calgary', 'AB')";
+  
+  db.query(locQ, [PostalCode], (err) => {
+    if (err) {
+      console.error("Location Error:", err);
+      return res.status(500).json({ message: "Error processing location." });
+    }
+
+    // STEP 2: Create the Base User
+    const userQ = `INSERT INTO users (FName, LName, Email, Password, PostalCode) VALUES (?, ?, ?, ?, ?)`;
+
+    db.query(userQ, [FName, LName, Email, Password, PostalCode], (err2, result) => {
+      if (err2) {
+        if (err2.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: "Email already exists!" });
+        return res.status(500).json({ message: err2.message });
+      }
+      
+      const newUserID = result.insertId;
+
+      // STEP 3: Handle Inheritance (MembershipHolder)
+      if (hasMembership) {
+        const memberQ = `INSERT INTO membershipholders (UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?)`;
+        db.query(memberQ, [newUserID, MembershipStore, Expiry], (err3) => {
+          if (err3) {
+            console.error("Membership Error:", err3);
+            return res.status(500).json({ message: "User created, but membership details failed." });
+          }
+          return res.status(201).json("Account and Membership created!");
+        });
+      } else {
+        return res.status(201).json("Standard Account created!");
+      }
+    });
   });
 });
