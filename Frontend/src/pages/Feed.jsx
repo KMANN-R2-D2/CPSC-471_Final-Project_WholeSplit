@@ -36,7 +36,7 @@ const Feed = () => {
         return { backgroundColor: '#e8f4fd', color: '#1a73e8' };
       case 'Fulfillment In Progress':
         return { backgroundColor: '#d4edda', color: '#155724' };
-      case 'Pending Member':
+      case 'Member Required':
         return { backgroundColor: '#fff3cd', color: '#856404' };
       default:
         return { backgroundColor: '#f8d7da', color: '#721c24' };

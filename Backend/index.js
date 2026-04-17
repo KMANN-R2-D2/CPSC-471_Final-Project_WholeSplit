@@ -146,34 +146,40 @@ app.post('/stores', checkAdmin, (req, res) => {
 //     res.json(data);
 //   });
 // });
+
+
 app.get("/posts", (req, res) => {
+  // We sum sg.QuantityTaken to get the total amount claimed by joiners
   const q = `
     SELECT 
       p.PostID, 
-      pr.ProductName, -- Getting name from the products table
-      p.QuantityRequested, 
+      pr.ProductName, 
+      pr.BulkAmount,           
+      p.QuantityRequested,     
       p.DatePosted, 
       p.Status,
-      COALESCE(SUM(sg.QuantityTaken), 0) AS UnitsClaimed
+      COALESCE(SUM(sg.QuantityTaken), 0) AS OthersClaimed
     FROM posts p
     JOIN products pr ON p.ProductID = pr.ProductID
     LEFT JOIN splitgroups sg ON p.PostID = sg.PostID
-    GROUP BY p.PostID, pr.ProductName, p.QuantityRequested, p.DatePosted, p.Status
+    GROUP BY p.PostID, pr.ProductName, pr.BulkAmount, p.QuantityRequested, p.DatePosted, p.Status
     ORDER BY p.DatePosted DESC
   `;
 
   db.query(q, (err, data) => {
     if (err) {
-      console.error("DEBUG - SQL Error:", err.sqlMessage);
+      console.error("SQL Error:", err.sqlMessage);
       return res.status(500).json(err);
     }
     return res.json(data);
   });
 });
+
 /**
  * CREATE NEW POST (SPLIT REQUEST)
  */
 app.post('/posts', (req, res) => {
+    // QuantityRequested here = The amount the creator wants (from your slider)
     const q = `
         INSERT INTO posts (QuantityRequested, DatePosted, Status, UserID, ProductID) 
         VALUES (?, NOW(), "Open", ?, ?)
@@ -194,52 +200,50 @@ app.post('/posts', (req, res) => {
 app.post("/groups", (req, res) => {
   const { StoreID, ResponderUserID, PostID, QuantityTaken } = req.body;
 
-  // 1. FIRST: Check how many units are actually left
-  const checkAvailabilityQ = `
-    SELECT p.QuantityRequested, COALESCE(SUM(sg.QuantityTaken), 0) AS TotalTaken
+  // 1. Get the limit directly from the product associated with this post
+  const checkQ = `
+    SELECT 
+      pr.BulkAmount, 
+      p.QuantityRequested AS CreatorShare,
+      (SELECT COALESCE(SUM(sg.QuantityTaken), 0) FROM splitgroups sg WHERE sg.PostID = p.PostID) AS OthersTaken
     FROM posts p
-    LEFT JOIN splitgroups sg ON p.PostID = sg.PostID
-    WHERE p.PostID = ?
-    GROUP BY p.PostID`;
+    JOIN products pr ON p.ProductID = pr.ProductID
+    WHERE p.PostID = ?`;
 
-  db.query(checkAvailabilityQ, [PostID], (err, results) => {
+  db.query(checkQ, [PostID], (err, results) => {
     if (err || results.length === 0) return res.status(500).json(err);
 
-    const { QuantityRequested, TotalTaken } = results[0];
-    const remaining = QuantityRequested - TotalTaken;
+    const { BulkAmount, CreatorShare, OthersTaken } = results[0];
+    
+    // Total capacity - (What creator took + what others already took)
+    const currentTotalClaimed = Number(CreatorShare) + Number(OthersTaken);
+    const available = Number(BulkAmount) - currentTotalClaimed;
 
-    // 2. VALIDATION: If user wants more than what's left, stop them
-    if (QuantityTaken > remaining) {
+    // 2. Validation
+    if (Number(QuantityTaken) > available) {
       return res.status(400).json({ 
-        message: `Only ${remaining} units available. You cannot claim ${QuantityTaken}.` 
+        message: `Validation Failed: Only ${available} left. You requested ${QuantityTaken}.` 
       });
     }
 
-    // 3. PROCEED: If valid, insert the record
-    const joinQ = `
-      INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID, PostID, QuantityTaken) 
-      VALUES ('Active', NOW(), ?, ?, ?, ?)`;
+    // 3. Insert the join (Mapping ResponderUserID to CreatorUserID for your specific schema)
+    const joinQ = `INSERT INTO splitgroups (Status, DateCreated, StoreID, CreatorUserID, PostID, QuantityTaken) VALUES ('Active', NOW(), ?, ?, ?, ?)`;
 
     db.query(joinQ, [StoreID, ResponderUserID, PostID, QuantityTaken], (err2) => {
       if (err2) return res.status(500).json(err2);
 
-      // 4. MEMBERSHIP CHECK: Update the status (same logic as before)
-      const checkMemberQ = `
-        SELECT m.MembershipID FROM splitgroups sg
-        JOIN membershipholders m ON sg.CreatorUserID = m.UserID
-        WHERE sg.PostID = ?`;
+      // 4. Update Status logic
+      const newTotal = currentTotalClaimed + Number(QuantityTaken);
+      
+      const memberQ = "SELECT m.MembershipID FROM posts p LEFT JOIN membershipholders m ON p.UserID = m.UserID WHERE p.PostID = ?";
+      
+      db.query(memberQ, [PostID], (err3, members) => {
+        let finalStatus = (newTotal >= BulkAmount) ? "Full" : 
+                          (members[0]?.MembershipID ? "Fulfillment In Progress" : "Member Required");
 
-      db.query(checkMemberQ, [PostID], (err3, members) => {
-        if (err3) return res.status(500).json(err3);
-
-        const newTotalTaken = parseInt(TotalTaken) + parseInt(QuantityTaken);
-        let finalStatus = (newTotalTaken >= QuantityRequested) ? "Full" : 
-                          (members.length > 0 ? "Fulfillment In Progress" : "Member Required");
-
-        const updatePostQ = "UPDATE posts SET Status = ? WHERE PostID = ?";
-        db.query(updatePostQ, [finalStatus, PostID], (err4) => {
+        db.query("UPDATE posts SET Status = ? WHERE PostID = ?", [finalStatus, PostID], (err4) => {
           if (err4) return res.status(500).json(err4);
-          return res.status(200).json({ message: "Joined successfully!" });
+          return res.status(200).json("Joined successfully!");
         });
       });
     });
