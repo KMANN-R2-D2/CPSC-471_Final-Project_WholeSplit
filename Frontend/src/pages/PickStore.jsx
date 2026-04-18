@@ -43,11 +43,11 @@ const PickStore = () => {
         fontFamily: "Segoe UI, Tahoma, sans-serif"
       }}
     >
-      <h2 style={{ color: "#2c3e50" }}>
+      <h2 style={{ color: "#3498db" }}>
         Select a Location for Split #{postId}
       </h2>
 
-      <p style={{ color: "#7f8c8d" }}>
+      <p style={{ color: "#FFFFFF" }}>
         Choose a Costco to proceed to quantity selection.
       </p>
 

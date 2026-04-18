@@ -18,6 +18,9 @@ import mysql from 'mysql2';
 // Enables Cross-Origin Resource Sharing (allows frontend to call backend API)
 import cors from 'cors';
 
+// Import bcrypt for password hashing (used in user authentication)
+import bcrypt from 'bcrypt';
+
 // Create Express application instance
 const app = express();
 
@@ -507,109 +510,115 @@ app.get('/locations', (req, res) => {
 app.post("/login", (req, res) => {
   const { Email, Password } = req.body;
 
-  // 1. Check regular users table
+  // 1. Fetch user by Email only. Include Password in the SELECT to compare it later.
   const userQuery = `
-    SELECT u.UserID, u.FName, u.LName, u.Email, u.PreferredSplitLocation, m.MembershipID 
+    SELECT u.UserID, u.FName, u.LName, u.Email, u.Password, u.PreferredSplitLocation, m.MembershipID 
     FROM users u
     LEFT JOIN membershipholders m ON u.UserID = m.UserID
-    WHERE u.Email = ? AND u.Password = ?
+    WHERE u.Email = ?
   `;
 
-  db.query(userQuery, [Email, Password], (err, userData) => {
+  db.query(userQuery, [Email], (err, userData) => {
     if (err) return res.status(500).json(err);
 
-    // If a regular user is found
     if (userData.length > 0) {
       const user = userData[0];
-      return res.status(200).json({
-        UserID: user.UserID,
-        FName: user.FName,
-        LName: user.LName,
-        Email: user.Email,
-        PreferredLocation: user.PreferredSplitLocation,
-        Role: "User",
-        isMember: user.MembershipID ? true : false
+
+      // 2. Use bcrypt to compare the provided plain-text password with the stored hash
+      bcrypt.compare(Password, user.Password, (errCompare, isMatch) => {
+        if (errCompare) return res.status(500).json("Error during password verification.");
+
+        if (isMatch) {
+          // Passwords match!
+          return res.status(200).json({
+            UserID: user.UserID,
+            FName: user.FName,
+            LName: user.LName,
+            Email: user.Email,
+            PreferredLocation: user.PreferredSplitLocation,
+            Role: "User",
+            isMember: user.MembershipID ? true : false
+          });
+        } else {
+          // Password mismatch
+          return res.status(401).json("Invalid email or password.");
+        }
+      });
+    } else {
+      // 3. Waterfall: Check administrators table if no regular user found
+      // Note: If you haven't hashed admin passwords, keep the direct comparison logic here
+      const adminQuery = `
+        SELECT SSN, FName, LName, Email, Role, Password 
+        FROM administrators 
+        WHERE Email = ?
+      `;
+
+      db.query(adminQuery, [Email], (err2, adminData) => {
+        if (err2) return res.status(500).json(err2);
+
+        if (adminData.length > 0) {
+          const admin = adminData[0];
+          
+          // Check if admin password matches (plain text for now, or use bcrypt.compare if hashed)
+          if (Password === admin.Password) {
+            return res.status(200).json({
+              UserID: admin.SSN, 
+              FName: admin.FName,
+              LName: admin.LName,
+              Email: admin.Email,
+              Role: admin.Role || "Admin",
+              isMember: false 
+            });
+          }
+        }
+        return res.status(401).json("Invalid email or password.");
       });
     }
-
-    // 2. Waterfall: Check the administrators table using the Password column
-    const adminQuery = `
-      SELECT SSN, FName, LName, Email, Role 
-      FROM administrators 
-      WHERE Email = ? AND Password = ?
-    `;
-
-    db.query(adminQuery, [Email, Password], (err2, adminData) => {
-      if (err2) return res.status(500).json(err2);
-
-      // If an admin is found
-      if (adminData.length > 0) {
-        const admin = adminData[0];
-        return res.status(200).json({
-          UserID: admin.SSN, 
-          FName: admin.FName,
-          LName: admin.LName,
-          Email: admin.Email,
-          Role: admin.Role || "Admin",
-          isMember: false 
-        });
-      }
-
-      // 3. No match in either table
-      return res.status(401).json("Invalid email or password.");
-    });
   });
 });
 
+
+const saltRounds = 10; // The cost factor for hashing
+
 app.post("/signup", (req, res) => {
   const { 
-    FName, 
-    LName, 
-    Email, 
-    Password, 
-    PostalCode, 
-    hasMembership, 
-    MembershipStore, 
-    Expiry 
+    FName, LName, Email, Password, PostalCode, 
+    hasMembership, MembershipStore, Expiry 
   } = req.body;
 
-  // STEP 1: Handle the Location Constraint
-  // Ensures the PostalCode exists in the locations table before the user is created.
-  const locQ = "INSERT IGNORE INTO locations (PostalCode, City, Province) VALUES (?, 'Calgary', 'AB')";
-  
-  db.query(locQ, [PostalCode], (err) => {
-    if (err) {
-      console.error("Location Error:", err);
-      return res.status(500).json({ message: "Error processing location." });
-    }
+  // STEP 1: Hash the password before doing anything else
+  bcrypt.hash(Password, saltRounds, (err, hash) => {
+    if (err) return res.status(500).json({ message: "Hashing error" });
 
-    // STEP 2: Create the Base User
-    const userQ = `INSERT INTO users (FName, LName, Email, Password, PostalCode) VALUES (?, ?, ?, ?, ?)`;
+    // STEP 2: Handle the Location Constraint
+    const locQ = "INSERT IGNORE INTO locations (PostalCode, City, Province) VALUES (?, 'Calgary', 'AB')";
+    
+    db.query(locQ, [PostalCode], (errLoc) => {
+      if (errLoc) return res.status(500).json({ message: "Error processing location." });
 
-    db.query(userQ, [FName, LName, Email, Password, PostalCode], (err2, result) => {
-      if (err2) {
-        if (err2.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: "Email already exists!" });
-        return res.status(500).json({ message: err2.message });
-      }
-      
-      const newUserID = result.insertId;
+      // STEP 3: Create the Base User (SAVE THE HASH, NOT THE RAW PASSWORD)
+      const userQ = `INSERT INTO users (FName, LName, Email, Password, PostalCode) VALUES (?, ?, ?, ?, ?)`;
 
-      // STEP 3: Handle Inheritance (MembershipHolder subtype)
-      if (hasMembership) {
-        // We do NOT provide MembershipID here because it is now set to AUTO_INCREMENT
-        const memberQ = `INSERT INTO membershipholders (UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?)`;
+      db.query(userQ, [FName, LName, Email, hash, PostalCode], (errUser, result) => {
+        if (errUser) {
+          if (errUser.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: "Email already exists!" });
+          return res.status(500).json({ message: errUser.message });
+        }
         
-        db.query(memberQ, [newUserID, MembershipStore, Expiry], (err3) => {
-          if (err3) {
-            console.error("Membership Error:", err3);
-            return res.status(500).json({ message: "User created, but membership details failed." });
-          }
-          return res.status(201).json("Account and Membership created!");
-        });
-      } else {
-        // Standard User path
-        return res.status(201).json("Standard Account created!");
-      }
+        const newUserID = result.insertId;
+
+        // STEP 4: Handle Inheritance (MembershipHolder subtype)
+        if (hasMembership) {
+          const memberQ = `INSERT INTO membershipholders (UserID, MembershipStore, MembershipExpirationDate) VALUES (?, ?, ?)`;
+          
+          db.query(memberQ, [newUserID, MembershipStore, Expiry], (errMem) => {
+            if (errMem) return res.status(500).json({ message: "User created, but membership failed." });
+            return res.status(201).json("Account and Membership created!");
+          });
+        } else {
+          return res.status(201).json("Standard Account created!");
+        }
+      });
     });
   });
 });

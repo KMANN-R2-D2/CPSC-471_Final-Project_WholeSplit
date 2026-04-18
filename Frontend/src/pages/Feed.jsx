@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 const Feed = () => {
   const [posts, setPosts] = useState([]);
 
-  // 1. Get user info once at the top of the component
   const user = JSON.parse(localStorage.getItem("user"));
   const isAdmin = user?.Role === "Admin";
 
@@ -17,12 +16,11 @@ const Feed = () => {
     axios.get("http://localhost:3000/posts").then((res) => setPosts(res.data));
   };
 
-  // 2. Added Delete Function
   const handleDelete = async (postId) => {
     if (window.confirm("Are you sure you want to delete this split request?")) {
       try {
         await axios.delete(`http://localhost:3000/posts/${postId}`);
-        fetchPosts(); // Refresh the list
+        fetchPosts(); 
       } catch (err) {
         alert("Failed to delete post");
         console.error(err);
@@ -47,7 +45,7 @@ const Feed = () => {
     <div style={{ padding: "40px", fontFamily: "Segoe UI, Tahoma, sans-serif" }}>
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #3498db", paddingBottom: "10px" }}>
-        <h1 style={{ color: "#2c3e50", margin: 0 }}>Community Split Feed</h1>
+        <h1 style={{ color: "#FFFFFF", margin: 0 }}>Community Split Feed</h1>
         <Link to="/create-post">
           <button style={{ backgroundColor: "#27ae60", color: "white", padding: "10px 20px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
             + New Split Request
@@ -69,9 +67,12 @@ const Feed = () => {
 
         <tbody>
           {posts.map((post, index) => {
-            const claimed = post.UnitsClaimed || 0;
-            const remaining = Math.max(post.QuantityRequested - claimed, 0);
-            const progressPercent = Math.min((claimed / post.QuantityRequested) * 100, 100);
+            const totalClaimed = Number(post.QuantityRequested || 0) + Number(post.OthersClaimed || 0);
+            const goal = Number(post.BulkAmount || totalClaimed); 
+            // Units remaining for the community
+            const remaining = Math.max(goal - totalClaimed, 0);
+            // Progress percentage relative to the package size
+            const progressPercent = Math.min((totalClaimed / goal) * 100, 100);
 
             return (
               <tr key={post.PostID} style={{ backgroundColor: index % 2 === 0 ? "#fff" : "#fafafa", borderBottom: "1px solid #eee" }}>
@@ -80,7 +81,7 @@ const Feed = () => {
 
                 <td style={{ padding: "12px", minWidth: "160px" }}>
                   <div style={{ fontSize: "11px", marginBottom: "4px", color: "#7f8c8d" }}>
-                    {claimed} / {post.QuantityRequested} Claimed
+                    {totalClaimed} / {goal} Units Claimed
                   </div>
                   <div style={{ background: "#eee", borderRadius: "10px", height: "8px", width: "100%" }}>
                     <div style={{ 
@@ -116,10 +117,8 @@ const Feed = () => {
                   </span>
                 </td>
 
-                {/* INTEGRATED ACTION COLUMN */}
                 <td style={{ padding: "12px" }}>
                   <div style={{ display: "flex", gap: "10px" }}>
-                    {/* Admin Delete Button */}
                     {isAdmin && (
                       <button 
                         onClick={() => handleDelete(post.PostID)}
@@ -129,7 +128,6 @@ const Feed = () => {
                       </button>
                     )}
 
-                    {/* User Join/Closed logic */}
                     {remaining > 0 ? (
                       <Link to={`/create-group/${post.PostID}`}>
                         <button style={{ cursor: "pointer", padding: "6px 12px", backgroundColor: "#3498db", color: "white", border: "none", borderRadius: "4px" }}>

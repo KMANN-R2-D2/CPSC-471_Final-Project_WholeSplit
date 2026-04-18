@@ -115,7 +115,7 @@ const formStyle = { marginBottom: "30px", padding: "20px", background: "#f9f9f9"
 const inputStyle = { padding: "8px", marginRight: "10px", borderRadius: "4px", border: "1px solid #ddd", width: "150px" };
 const addButtonStyle = { backgroundColor: "#27ae60", color: "white", padding: "10px 15px", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" };
 const deleteButtonStyle = { backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "4px", cursor: "pointer" };
-const thStyle = { padding: "12px" };
+const thStyle = { padding: "12px", color: "#3498db" };
 const tdStyle = { padding: "12px" };
 
 export default ProductPage;

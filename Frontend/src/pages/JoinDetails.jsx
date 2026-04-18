@@ -16,44 +16,49 @@ const JoinDetails = () => {
     axios.get(`http://localhost:3000/posts`).then(res => {
       const currentPost = res.data.find(p => p.PostID === parseInt(postId));
       if (currentPost) {
-        // Calculate limit: Initial - Claimed
-        const remaining = currentPost.QuantityRequested - (currentPost.UnitsClaimed || 0);
+        // MATCHING YOUR BACKEND NAMES: BulkAmount, QuantityRequested, OthersClaimed
+        const totalTaken = Number(currentPost.QuantityRequested || 0) + Number(currentPost.OthersClaimed || 0);
+        const remaining = Math.max(Number(currentPost.BulkAmount || 0) - totalTaken, 0);
+        
         setMaxAvailable(remaining);
+        // Set initial qty to 1, or 0 if nothing is left
+        setQty(remaining > 0 ? 1 : 0);
       }
     });
   }, [postId]);
 
   const handleConfirmJoin = async () => {
-    try {
-      await axios.post("http://localhost:3000/groups", {
-        PostID: postId,
-        ResponderUserID: user.UserID,
-        StoreID: state.storeID,
-        QuantityTaken: qty
-      });
-      navigate("/");
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to join");
-    }
-  };
+  try {
+    await axios.post("http://localhost:3000/groups", {
+      PostID: Number(postId), // Ensure this is a number
+      ResponderUserID: Number(user.UserID),
+      StoreID: Number(state.storeID),
+      QuantityTaken: Number(qty) // Ensure this is a number
+    });
+    navigate("/");
+  } catch (err) {
+    alert(err.response?.data?.message || "Failed to join");
+  }
+};
 
   return (
-    <div style={{ padding: "40px", textAlign: "center", color: "#2c3e50" }}>
+    <div style={{ padding: "40px", textAlign: "center", color: "#2c3e50", fontFamily: "Segoe UI" }}>
       <h1>Claim Your Units</h1>
-      <p>Store: <b>{state?.storeName}</b></p>
+      <p style={{ color: "#FFFFFF" }}>Store: <b>{state?.storeName}</b></p>
 
       <div style={{ margin: "40px auto", maxWidth: "400px" }}>
         <h2 style={{ fontSize: "3rem", margin: "10px 0", color: "#3498db" }}>{qty}</h2>
-        <p>Units out of {maxAvailable} available</p>
+        <p style={{ color: "#FFFFFF" }}>Units out of <b>{maxAvailable}</b> remaining in this bulk pack</p>
         
         {/* THE SLIDER BAR */}
         <input 
           type="range"
           min="1"
-          max={maxAvailable}
+          max={maxAvailable > 0 ? maxAvailable : 1}
+          disabled={maxAvailable === 0}
           value={qty}
           onChange={(e) => setQty(parseInt(e.target.value))}
-          style={{ width: "100%", height: "15px", cursor: "pointer" }}
+          style={{ width: "100%", height: "15px", cursor: maxAvailable > 0 ? "pointer" : "not-allowed" }}
         />
 
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", color: "#7f8c8d" }}>
@@ -62,13 +67,21 @@ const JoinDetails = () => {
         </div>
       </div>
 
-      <button onClick={handleConfirmJoin} style={btnStyle}>
+      <button 
+        onClick={handleConfirmJoin} 
+        disabled={maxAvailable === 0}
+        style={{
+          ...btnStyle,
+          backgroundColor: maxAvailable === 0 ? "#ccc" : "#27ae60",
+          cursor: maxAvailable === 0 ? "not-allowed" : "pointer"
+        }}
+      >
         Confirm Selection
       </button>
     </div>
   );
 };
 
-const btnStyle = { backgroundColor: "#27ae60", color: "white", padding: "15px 30px", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "1.1rem", fontWeight: "bold" };
+const btnStyle = { color: "white", padding: "15px 30px", border: "none", borderRadius: "8px", fontSize: "1.1rem", fontWeight: "bold" };
 
 export default JoinDetails;
