@@ -243,8 +243,9 @@ const inputStyle = {
   border: "1px solid #e5e7eb",
   fontSize: "1rem",
   outline: "none",
+  transition: "all 0.2s ease",
   backgroundColor: "#f9fafb",
-  transition: "all 0.2s ease"
+  color: "#111827"
 };
 
 const checkboxRow = {

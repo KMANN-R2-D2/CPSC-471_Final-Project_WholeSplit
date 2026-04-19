@@ -97,22 +97,6 @@ const PickStore = () => {
           </div>
         ))}
 
-        {/* ======================================================
-            ADD NEW STORE OPTION
-            (Fallback for missing locations)
-        ====================================================== */}
-        <div
-          style={addStoreCardStyle}
-          onClick={() => navigate("/add-store")}
-        >
-          <h3 style={{ margin: 0, color: "#2c3e50" }}>
-            + Can’t find your store?
-          </h3>
-
-          <p style={{ margin: "6px 0 0 0", color: "#7f8c8d" }}>
-            Tap here to request a new location
-          </p>
-        </div>
 
       </div>
     </div>
