@@ -20,6 +20,8 @@ const SignUp = () => {
     Email: "",
     Password: "",
     PostalCode: "",
+    PreferredPaymentMethod: "",   
+    PreferredShoppingDay: "",     
     hasMembership: false,
     MembershipStore: "",
     Expiry: ""
@@ -89,6 +91,40 @@ const SignUp = () => {
           <input type="email" name="Email" placeholder="Email" onChange={handleChange} required style={inputStyle} />
           <input type="password" name="Password" placeholder="Password" onChange={handleChange} required style={inputStyle} />
           <input name="PostalCode" placeholder="Postal Code" onChange={handleChange} required style={inputStyle} />
+
+          <div>
+            <label style={labelStyle}>Preferred Payment Method</label>
+            <select
+              name="PreferredPaymentMethod"
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">-- Select Payment Method --</option>
+              <option value="Debit Card">Debit Card</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Preferred Shopping Day</label>
+            <select
+              name="PreferredShoppingDay"
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">-- Select Day --</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+          </div>
 
           {/* ======================================================
               MEMBERSHIP TOGGLE SECTION

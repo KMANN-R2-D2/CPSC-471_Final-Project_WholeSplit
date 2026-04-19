@@ -37,10 +37,6 @@ const Navbar = () => {
               Hi, <strong>{user.FName}</strong>
             </span>
 
-            <Link to="/create-post" style={primaryBtn}>
-              ➕ New Split
-            </Link>
-
             <button onClick={handleSignOut} style={logoutBtnStyle}>
               Sign Out
             </button>

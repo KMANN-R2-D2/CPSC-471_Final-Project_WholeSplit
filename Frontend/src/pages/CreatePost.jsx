@@ -28,6 +28,8 @@ const CreatePost = () => {
   // ======================================================
   const [products, setProducts] = useState([]);
 
+  const [stores, setStores] = useState([]);
+
   // ======================================================
   // USER AUTHENTICATION
   // Retrieve logged-in user from localStorage
@@ -42,6 +44,7 @@ const CreatePost = () => {
   const [formData, setFormData] = useState({
     UserID: user ? user.UserID : "",
     ProductID: "",
+    StoreID: "",
     QuantityRequested: ""
   });
 
@@ -54,10 +57,13 @@ const CreatePost = () => {
       alert("Please login first!");
       navigate("/login");
     } else {
-      axios
-        .get("http://localhost:3000/products")
+      axios.get("http://localhost:3000/products")
         .then(res => setProducts(res.data))
         .catch(err => console.error("Error fetching products:", err));
+
+      axios.get("http://localhost:3000/stores")
+        .then(res => setStores(res.data))
+        .catch(err => console.error("Error fetching stores:", err));
     }
   }, [user, navigate]);
 
@@ -84,10 +90,12 @@ const CreatePost = () => {
       const payload = {
         ...formData,
         UserID: Number(formData.UserID),
-        ProductID: Number(formData.ProductID)
+        ProductID: Number(formData.ProductID),
+        StoreID: Number(formData.StoreID),
+        QuantityRequested: Number(formData.QuantityRequested)
       };
 
-      await axios.post("http://localhost:3000/posts", payload);
+      await axios.post("http://localhost:3000/create-post", payload);
 
       alert("Split Request Published to Feed!");
 
@@ -95,7 +103,7 @@ const CreatePost = () => {
       navigate("/");
     } catch (err) {
       console.error("Error creating post:", err);
-      alert("Failed to create post.");
+      alert("Error: " + (err.response?.data?.message || err.response?.data || err.message));
     }
   };
 
@@ -149,6 +157,24 @@ const CreatePost = () => {
             </select>
           </div>
 
+          {/* STORE SELECT */}
+          <div style={fieldGroup}>
+            <label style={labelStyle}>Select Store</label>
+            <select
+              name="StoreID"
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">Choose a store</option>
+              {stores.map(s => (
+                <option key={s.StoreID} value={s.StoreID}>
+                  {s.Name} — {s.City}
+                </option>
+              ))}
+            </select>
+          </div>
+          
           {/* QUANTITY INPUT */}
           <div style={fieldGroup}>
             <label style={labelStyle}>Quantity</label>
