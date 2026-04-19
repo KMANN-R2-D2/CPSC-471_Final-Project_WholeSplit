@@ -184,7 +184,8 @@ const inputStyle = {
   fontSize: "1rem",
   outline: "none",
   transition: "all 0.2s ease",
-  backgroundColor: "#f9fafb"
+  backgroundColor: "#f9fafb",
+  color: "#111827"
 };
 
 // Login button
