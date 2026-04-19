@@ -43,7 +43,8 @@ const Users = () => {
       <div style={listStyle}>
 
         {users.map((u, index) => (
-          <div key={index} style={cardStyle}>
+          <div onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+  onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"} key={index} style={cardStyle}>
 
             {/* ======================================================
                 CLICKABLE HEADER ROW
@@ -125,39 +126,47 @@ const Users = () => {
 ====================================================== */
 
 const pageStyle = {
-  padding: "20px",
-  fontFamily: "Segoe UI, sans-serif",
-  backgroundColor: "#f5f7fa",
-  minHeight: "100vh"
+  minHeight: "100vh",
+  padding: "30px 20px",
+  fontFamily: "Inter, Segoe UI, sans-serif",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)"
 };
 
 const titleStyle = {
-  margin: "0",
-  color: "#2c3e50"
+  margin: 0,
+  fontSize: "2rem",
+  fontWeight: "800",
+  color: "#111827",
+  textAlign: "center"
 };
 
 const subtitleStyle = {
   marginTop: "6px",
-  marginBottom: "20px",
-  color: "#7f8c8d"
+  marginBottom: "24px",
+  color: "#6b7280",
+  textAlign: "center"
 };
 
 const listStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "12px"
+  gap: "16px",
+  maxWidth: "600px",
+  margin: "0 auto"
 };
 
 const cardStyle = {
-  backgroundColor: "#fff",
-  borderRadius: "12px",
-  border: "1px solid #eee",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-  overflow: "hidden"
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(8px)",
+  borderRadius: "16px",
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+  overflow: "hidden",
+  transition: "all 0.2s ease"
 };
 
 const headerRow = {
-  padding: "14px 16px",
+  padding: "16px",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -165,26 +174,28 @@ const headerRow = {
 };
 
 const nameStyle = {
-  fontWeight: "bold",
-  color: "#2c3e50"
+  fontWeight: "700",
+  fontSize: "1rem",
+  color: "#111827"
+
 };
 
 const emailPreview = {
-  fontSize: "12px",
-  color: "#7f8c8d",
+  fontSize: "0.8rem",
+  color: "#6b7280",
   marginTop: "2px"
 };
 
 const toggleText = {
-  fontSize: "12px",
-  color: "#3498db",
-  fontWeight: "bold"
+  fontSize: "0.8rem",
+  color: "#2563eb",
+  fontWeight: "600"
 };
 
 const expandedBox = {
-  padding: "14px 16px",
-  borderTop: "1px solid #eee",
-  backgroundColor: "#f8fbff",
+  padding: "16px",
+  borderTop: "1px solid #e5e7eb",
+  background: "linear-gradient(135deg, #eff6ff, #f0fdf4)",
   display: "flex",
   flexDirection: "column",
   gap: "12px"
@@ -196,15 +207,17 @@ const infoBlock = {
 };
 
 const labelStyle = {
-  fontSize: "11px",
-  color: "#7f8c8d",
+  fontSize: "10px",
+  color: "#6b7280",
   textTransform: "uppercase",
-  fontWeight: "bold"
+  fontWeight: "700",
+  letterSpacing: "0.5px"
+
 };
 
 const valueStyle = {
   fontSize: "14px",
-  color: "#2c3e50",
+  color: "#111827",
   marginTop: "4px"
 };
 

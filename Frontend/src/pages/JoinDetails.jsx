@@ -159,7 +159,8 @@ const JoinDetails = () => {
               <span>{maxAvailable}</span>
             </div>
 
-            <button onClick={handleConfirmJoin} style={btnStyle}>
+            <button onMouseOver={(e) => e.target.style.transform = "scale(1.03)"}
+onMouseOut={(e) => e.target.style.transform = "scale(1)"} onClick={handleConfirmJoin} style={btnStyle}>
               Confirm — Pay ${previewShare}
             </button>
           </>
@@ -171,7 +172,8 @@ const JoinDetails = () => {
             <p style={{ color: "#e67e22", fontWeight: "bold" }}>
               You have already joined this split.
             </p>
-            <button onClick={handleLeave}
+            <button onMouseOver={(e) => e.target.style.transform = "scale(1.03)"}
+onMouseOut={(e) => e.target.style.transform = "scale(1)"} onClick={handleLeave}
               style={{ ...btnStyle, backgroundColor: "#e74c3c" }}>
               Leave This Split
             </button>
@@ -186,47 +188,92 @@ const JoinDetails = () => {
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 
 const pageStyle = {
-  minHeight: "100vh", display: "flex", justifyContent: "center",
-  alignItems: "flex-start", padding: "30px 20px",
-  fontFamily: "Segoe UI, sans-serif", backgroundColor: "#f5f7fa"
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  padding: "40px 20px",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)",
+  fontFamily: "Inter, Segoe UI, sans-serif"
 };
 const cardStyle = {
-  width: "100%", maxWidth: "520px", backgroundColor: "#fff",
-  padding: "28px", borderRadius: "14px",
-  boxShadow: "0 6px 18px rgba(0,0,0,0.08)"
+  width: "100%",
+  maxWidth: "560px",
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(10px)",
+  padding: "36px",
+  borderRadius: "24px",
+  boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
+  border: "1px solid rgba(255,255,255,0.3)"
 };
-const titleStyle = { marginBottom: 6, color: "#2c3e50", textAlign: "center" };
-const subtitleStyle = { color: "#7f8c8d", marginBottom: 20, textAlign: "center" };
+const titleStyle = { margin: 0,
+  margin: 0,
+  fontSize: "2.2rem",
+  fontWeight: "800",
+  color: "#111827",
+  textAlign: "center",
+  letterSpacing: "-0.5px" };
+const subtitleStyle = { color: "#6b7280",
+  marginTop: 8,
+  marginBottom: 20,
+  textAlign: "center",
+  fontSize: "0.95rem" };
 const breakdownBox = {
-  backgroundColor: "#f8fbff", border: "1px solid #d6eaf8",
-  borderRadius: 10, padding: "14px 18px", marginBottom: 20
+  background: "linear-gradient(135deg, #f8fafc, #eef4ff)",
+  border: "1px solid #e5e7eb",
+  borderRadius: "18px",
+  padding: "20px",
+  marginBottom: 24
 };
 const breakdownRow = {
   display: "flex", justifyContent: "space-between",
   fontSize: "0.95rem", marginBottom: 6, color: "#2c3e50"
 };
 const sectionTitle = { color: "#2c3e50", marginBottom: 10, marginTop: 20 };
-const tableStyle = { width: "100%", borderCollapse: "collapse", marginBottom: 10 };
+const tableStyle = { width: "100%",
+  borderCollapse: "separate",
+  borderSpacing: "0 8px",
+  marginBottom: 10 };
 const tableHeader = { backgroundColor: "#f2f2f2" };
 const th = { padding: "8px 10px", textAlign: "left", fontSize: "0.85rem", color: "#7f8c8d" };
 const td = { padding: "8px 10px", fontSize: "0.9rem", color: "#2c3e50" };
-const rowEven = { backgroundColor: "#fff" };
-const rowOdd  = { backgroundColor: "#fafafa" };
+const rowEven = { backgroundColor: "#ffffff",
+  borderRadius: "10px" };
+const rowOdd  = { backgroundColor: "#f9fafb",
+  borderRadius: "10px" };
 const memberBadge = { color: "#27ae60", fontSize: "0.75rem", fontWeight: "bold" };
 const qtyDisplay = {
-  fontSize: "3rem", fontWeight: "bold", color: "#3498db",
-  margin: "10px 0", textAlign: "center"
+  fontSize: "3.5rem",
+  fontWeight: "900",
+  color: "#2563eb",
+  margin: "10px 0",
+  textAlign: "center",
+  textShadow: "0 4px 10px rgba(37,99,235,0.2)"
 };
 const infoText = { color: "#7f8c8d", marginBottom: 10, textAlign: "center" };
-const sliderStyle = { width: "100%", height: 10, cursor: "pointer", marginTop: 10 };
+const sliderStyle = { width: "100%",
+  height: 8,
+  borderRadius: "10px",
+  background: "linear-gradient(to right, #3b82f6, #22c55e)",
+  cursor: "pointer",
+  marginTop: 12 };
 const rangeRow = {
   display: "flex", justifyContent: "space-between",
   marginTop: 10, fontSize: 14, color: "#7f8c8d"
 };
 const btnStyle = {
-  marginTop: 20, width: "100%", backgroundColor: "#27ae60",
-  color: "white", padding: 14, border: "none", borderRadius: 10,
-  cursor: "pointer", fontSize: "1rem", fontWeight: "bold"
+  marginTop: 24,
+  width: "100%",
+  background: "linear-gradient(135deg, #22c55e, #16a34a)",
+  color: "white",
+  padding: 16,
+  border: "none",
+  borderRadius: 14,
+  cursor: "pointer",
+  fontSize: "1rem",
+  fontWeight: "bold",
+  boxShadow: "0 10px 20px rgba(34,197,94,0.25)",
+  transition: "all 0.2s ease"
 };
 
 export default JoinDetails;

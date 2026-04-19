@@ -9,9 +9,10 @@
 // Import React hooks for state management and lifecycle handling
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Feed = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const user = JSON.parse(localStorage.getItem("user"));
   const isAdmin = user?.Role === "Admin";
@@ -33,6 +34,15 @@ const Feed = () => {
       } catch (err) { alert("Failed to delete post"); }
     }
   };
+  const handleJoinClick = (postId) => {
+  if (!user) {
+    alert("You must be logged in to join a split.");
+    navigate("/login");
+    return;
+  }
+
+  navigate(`/create-group/${postId}`);
+};
 
   const handleLeave = async (postId) => {
     if (!user) return;
@@ -163,9 +173,19 @@ const Feed = () => {
                           Leave Split
                         </button>
                       ) : remaining > 0 ? (
-                        <Link to={`/create-group/${post.PostID}`}>
-                          <button style={joinBtn}>Join Split</button>
-                        </Link>
+                        <button
+    onClick={() => handleJoinClick(post.PostID)}
+    style={{
+      cursor: "pointer",
+      padding: "6px 12px",
+      backgroundColor: "#3498db",
+      color: "white",
+      border: "none",
+      borderRadius: "4px"
+    }}
+  >
+    Join Split
+  </button>
                       ) : (
                         <button style={closedBtn} disabled>Closed</button>
                       )

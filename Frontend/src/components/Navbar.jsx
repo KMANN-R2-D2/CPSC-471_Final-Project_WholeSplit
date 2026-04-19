@@ -13,7 +13,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     alert("You have been signed out.");
     navigate("/login");
-    window.location.reload();
+    
   };
 
   return (
@@ -24,8 +24,22 @@ const Navbar = () => {
         <Link to="/" style={logoStyle}>WholeSplit</Link>
 
         <div style={linkGroup}>
-          <Link to="/products" style={linkStyle}>Products</Link>
-          <Link to="/users" style={linkStyle}>Community</Link>
+          <Link to="/products" style={linkStyle} onMouseEnter={(e) => {
+              e.target.style.background = "#1e293b";
+              e.target.style.color = "#38bdf8";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "transparent";
+              e.target.style.color = "#e2e8f0";
+            }}>Products</Link>
+          <Link to="/users" style={linkStyle} onMouseEnter={(e) => {
+              e.target.style.background = "#1e293b";
+              e.target.style.color = "#38bdf8";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "transparent";
+              e.target.style.color = "#e2e8f0";
+            }}>Community</Link>
         </div>
       </div>
 
@@ -37,15 +51,24 @@ const Navbar = () => {
               Hi, <strong>{user.FName}</strong>
             </span>
 
-            <button onClick={handleSignOut} style={logoutBtnStyle}>
+            <button onClick={handleSignOut} style={logoutBtnStyle} onMouseEnter={(e) => (e.target.style.background = "#dc2626")}
+              onMouseLeave={(e) => (e.target.style.background = "#ef4444")}>
               Sign Out
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" style={linkStyle}>Login</Link>
+            <Link to="/login" style={linkStyle} onMouseEnter={(e) => {
+                e.target.style.background = "#1e293b";
+                e.target.style.color = "#38bdf8";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "transparent";
+                e.target.style.color = "#e2e8f0";
+              }}>Login</Link>
 
-            <Link to="/signup" style={primaryBtn}>
+            <Link to="/signup" style={primaryBtn} onMouseEnter={(e) => (e.target.style.background = "#16a34a")}
+              onMouseLeave={(e) => (e.target.style.background = "#22c55e")}>
               Sign Up
             </Link>
           </>
@@ -60,17 +83,22 @@ const Navbar = () => {
 
 const navStyle = {
   display: "flex",
-  flexWrap: "wrap", // allows mobile stacking
+  flexWrap: "wrap",
   alignItems: "center",
-  padding: "12px 5%",
-  background: "#2c3e50",
-  gap: "10px"
+  justifyContent: "space-between",
+  padding: "14px 6%",
+  background: "#0f172a",
+  borderBottom: "1px solid #1e293b",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+  position: "sticky",
+  top: 0,
+  zIndex: 1000
 };
 
 const leftSection = {
   display: "flex",
   alignItems: "center",
-  gap: "20px",
+  gap: "28px",
   flexWrap: "wrap"
 };
 
@@ -78,51 +106,59 @@ const rightSection = {
   marginLeft: "auto",
   display: "flex",
   alignItems: "center",
-  gap: "12px",
+  gap: "14px",
   flexWrap: "wrap"
 };
 
 const logoStyle = {
-  color: "#3498db",
-  fontSize: "1.6rem",
-  fontWeight: "bold",
-  textDecoration: "none"
+  color: "#38bdf8",
+  fontSize: "1.55rem",
+  fontWeight: "700",
+  textDecoration: "none",
+  letterSpacing: "0.3px",
+  padding: "4px 0"
 };
 
 const linkGroup = {
   display: "flex",
-  gap: "15px"
+  gap: "18px",
+  alignItems: "center"
 };
 
 const linkStyle = {
-  color: "white",
+  color: "#e2e8f0",
   textDecoration: "none",
-  fontSize: "1rem",
-  padding: "8px 10px"
+  fontSize: "0.95rem",
+  padding: "8px 12px",
+  borderRadius: "8px",
+  transition: "0.2s ease"
 };
 
 const welcomeText = {
-  color: "#ecf0f1",
+  color: "#cbd5e1",
   fontSize: "0.95rem"
 };
 
 const primaryBtn = {
-  background: "#27ae60",
+  background: "#22c55e",
   color: "white",
   padding: "10px 16px",
-  borderRadius: "6px",
+  borderRadius: "8px",
   textDecoration: "none",
-  fontWeight: "bold"
+  fontWeight: "600",
+  border: "none",
+  transition: "0.2s ease"
 };
 
 const logoutBtnStyle = {
-  background: "#e74c3c",
+  background: "#ef4444",
   color: "white",
   border: "none",
   padding: "10px 16px",
-  borderRadius: "6px",
+  borderRadius: "8px",
   cursor: "pointer",
-  fontWeight: "bold"
+  fontWeight: "600",
+  transition: "0.2s ease"
 };
 
 export default Navbar;

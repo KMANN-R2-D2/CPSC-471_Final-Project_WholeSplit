@@ -161,7 +161,8 @@ const ProductPage = () => {
       <div style={gridStyle}>
 
         {products.map(item => (
-          <div key={item.ProductID} style={cardStyle}>
+          <div key={item.ProductID} style={cardStyle} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.03)"}
+  onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
 
             {/* BRAND */}
             <div style={brandStyle}>
@@ -218,96 +219,117 @@ const ProductPage = () => {
 // ======================================================
 
 const pageStyle = {
-  padding: "20px",
-  fontFamily: "Segoe UI, sans-serif",
-  backgroundColor: "#f5f7fa",
-  minHeight: "100vh"
+  minHeight: "100vh",
+  padding: "30px 20px",
+  fontFamily: "Inter, Segoe UI, sans-serif",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)"
 };
 
 const titleStyle = {
-  margin: "0",
-  color: "#2c3e50"
+  margin: 0,
+  fontSize: "2rem",
+  fontWeight: "800",
+  color: "#111827",
+  textAlign: "center"
 };
 
 const subtitleStyle = {
   marginTop: "6px",
-  marginBottom: "20px",
-  color: "#7f8c8d"
+  marginBottom: "24px",
+  color: "#6b7280",
+  textAlign: "center"
 };
 
 const gridStyle = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: "12px"
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "16px",
+  maxWidth: "1000px",
+  margin: "0 auto"
 };
 
 const cardStyle = {
-  backgroundColor: "#fff",
-  borderRadius: "12px",
-  padding: "14px",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-  border: "1px solid #eee"
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(8px)",
+  borderRadius: "16px",
+  padding: "16px",
+  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+  border: "1px solid #e5e7eb",
+  transition: "all 0.2s ease",
+  cursor: "pointer"
 };
 
 const brandStyle = {
-  fontSize: "12px",
-  color: "#3498db",
-  fontWeight: "bold",
-  marginBottom: "6px"
+  fontSize: "11px",
+  color: "#2563eb",
+  fontWeight: "700",
+  marginBottom: "6px",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px"
 };
 
 const nameStyle = {
-  margin: "0",
-  fontSize: "1rem",
-  color: "#2c3e50"
+  margin: 0,
+  fontSize: "1.1rem",
+  fontWeight: "700",
+  color: "#111827"
 };
 
 const sizeStyle = {
   marginTop: "8px",
-  color: "#7f8c8d",
-  fontSize: "14px"
+  color: "#6b7280",
+  fontSize: "0.85rem"
 };
 
 const idStyle = {
   marginTop: "10px",
-  fontSize: "11px",
-  color: "#bdc3c7"
+  fontSize: "10px",
+  color: "#9ca3af"
 };
 
 const formStyle = {
   marginBottom: "30px",
   padding: "20px",
-  background: "#f9f9f9",
-  borderRadius: "8px",
-  border: "1px solid #ddd"
+  background: "rgba(255,255,255,0.9)",
+  borderRadius: "16px",
+  border: "1px solid #e5e7eb",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "10px",
+  justifyContent: "center"
 };
 
 const inputStyle = {
-  padding: "8px",
-  marginRight: "10px",
-  borderRadius: "4px",
-  border: "1px solid #ddd",
-  width: "150px"
+  padding: "10px",
+  borderRadius: "8px",
+  border: "1px solid #e5e7eb",
+  fontSize: "0.9rem",
+  outline: "none",
+  backgroundColor: "#f9fafb"
 };
 
 const addButtonStyle = {
-  backgroundColor: "#27ae60",
+  background: "linear-gradient(135deg, #22c55e, #16a34a)",
   color: "white",
-  padding: "10px 15px",
+  padding: "10px 16px",
   border: "none",
-  borderRadius: "4px",
+  borderRadius: "10px",
   cursor: "pointer",
-  fontWeight: "bold"
+  fontWeight: "bold",
+  boxShadow: "0 8px 18px rgba(34,197,94,0.25)"
 };
 
 const deleteButtonStyle = {
-  marginTop: "10px",
-  backgroundColor: "#e74c3c",
+  marginTop: "12px",
+  background: "linear-gradient(135deg, #ef4444, #dc2626)",
   color: "white",
   border: "none",
-  padding: "6px 10px",
-  borderRadius: "4px",
-  cursor: "pointer"
+  padding: "8px 12px",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "0.8rem",
+  fontWeight: "600"
 };
 
 export default ProductPage;

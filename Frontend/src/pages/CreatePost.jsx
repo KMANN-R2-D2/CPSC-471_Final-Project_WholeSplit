@@ -209,75 +209,86 @@ const CreatePost = () => {
 
 // Page wrapper (centers content)
 const pageStyle = {
-  padding: "20px",
+  padding: "30px 20px",
   fontFamily: "Segoe UI, sans-serif",
   display: "flex",
   justifyContent: "center",
-  alignItems: "center"
+  alignItems: "flex-start",
+  minHeight: "100vh",
+  background: "linear-gradient(180deg, #0b1220 0%, #111827 100%)"
 };
 
 // Main card container
 const cardStyle = {
   width: "100%",
-  maxWidth: "600px",
-  backgroundColor: "#fff",
-  padding: "20px",
-  borderRadius: "12px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+  maxWidth: "620px",
+  backgroundColor: "#0f172a",
+  padding: "28px",
+  borderRadius: "16px",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+  border: "1px solid #1e293b"
 };
 
 // Title styling
 const titleStyle = {
   marginBottom: "8px",
-  color: "#2c3e50"
+  color: "#f8fafc",
+  fontSize: "1.8rem",
+  fontWeight: "700"
 };
 
 // Subtitle styling
 const subtitleStyle = {
-  marginBottom: "20px",
-  color: "#7f8c8d",
-  fontSize: "0.95rem"
+  marginBottom: "22px",
+  color: "#94a3b8",
+  fontSize: "0.98rem",
+  lineHeight: "1.5"
 };
 
 // Form layout
 const formStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "16px"
+  gap: "18px"
 };
 
 // Grouping label + input
 const fieldGroup = {
   display: "flex",
   flexDirection: "column",
-  gap: "6px"
+  gap: "8px"
 };
 
 // Label styling
 const labelStyle = {
   fontWeight: "600",
-  color: "#2c3e50"
+  color: "#e2e8f0",
+  fontSize: "0.95rem"
 };
 
 // Input / select styling
 const inputStyle = {
-  padding: "12px",
-  borderRadius: "8px",
-  border: "1px solid #ddd",
-  fontSize: "1rem"
+  padding: "12px 14px",
+  borderRadius: "10px",
+  border: "1px solid #334155",
+  fontSize: "1rem",
+  backgroundColor: "#111827",
+  color: "#f8fafc",
+  outline: "none"
 };
 
 // Primary action button
 const buttonStyle = {
-  marginTop: "10px",
-  backgroundColor: "#3498db",
+  marginTop: "8px",
+  backgroundColor: "#22c55e",
   color: "white",
   border: "none",
   padding: "14px",
-  borderRadius: "8px",
-  fontWeight: "bold",
+  borderRadius: "10px",
+  fontWeight: "700",
   cursor: "pointer",
-  fontSize: "1rem"
+  fontSize: "1rem",
+  boxShadow: "0 6px 18px rgba(34, 197, 94, 0.25)"
 };
 
 export default CreatePost;

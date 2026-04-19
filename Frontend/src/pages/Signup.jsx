@@ -86,11 +86,16 @@ const SignUp = () => {
         {/* FORM */}
         <form onSubmit={handleSignUp} style={formStyle}>
 
-          <input name="FName" placeholder="First Name" onChange={handleChange} required style={inputStyle} />
-          <input name="LName" placeholder="Last Name" onChange={handleChange} required style={inputStyle} />
-          <input type="email" name="Email" placeholder="Email" onChange={handleChange} required style={inputStyle} />
-          <input type="password" name="Password" placeholder="Password" onChange={handleChange} required style={inputStyle} />
-          <input name="PostalCode" placeholder="Postal Code" onChange={handleChange} required style={inputStyle} />
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"} name="FName" placeholder="First Name" onChange={handleChange} required style={inputStyle} />
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"} name="LName" placeholder="Last Name" onChange={handleChange} required style={inputStyle} />
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"} type="email" name="Email" placeholder="Email" onChange={handleChange} required style={inputStyle} />
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"} type="password" name="Password" placeholder="Password" onChange={handleChange} required style={inputStyle} />
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"} name="PostalCode" placeholder="Postal Code" onChange={handleChange} required style={inputStyle} />
 
           <div>
             <label style={labelStyle}>Preferred Payment Method</label>
@@ -130,7 +135,8 @@ const SignUp = () => {
               MEMBERSHIP TOGGLE SECTION
           ====================================================== */}
           <label style={checkboxRow}>
-            <input
+            <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"}
               type="checkbox"
               name="hasMembership"
               checked={info.hasMembership}
@@ -162,7 +168,8 @@ const SignUp = () => {
                 Membership Expiry:
               </label>
 
-              <input
+              <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"}
                 name="Expiry"
                 type="date"
                 onChange={handleChange}
@@ -173,7 +180,8 @@ const SignUp = () => {
           )}
 
           {/* SUBMIT BUTTON */}
-          <button type="submit" style={btnStyle}>
+          <button onMouseOver={(e) => e.target.style.transform = "scale(1.04)"}
+            onMouseOut={(e) => e.target.style.transform = "scale(1)"} type="submit" style={btnStyle}>
             Create Account
           </button>
 
@@ -193,44 +201,50 @@ const pageStyle = {
   justifyContent: "center",
   alignItems: "center",
   padding: "20px",
-  fontFamily: "Segoe UI, sans-serif",
-  backgroundColor: "#f5f7fa"
+  fontFamily: "Inter, Segoe UI, sans-serif",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)"
 };
 
 const cardStyle = {
   width: "100%",
-  maxWidth: "450px",
-  backgroundColor: "#fff",
-  padding: "28px",
-  borderRadius: "14px",
-  boxShadow: "0 6px 18px rgba(0,0,0,0.08)"
+  maxWidth: "460px",
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(10px)",
+  padding: "32px",
+  borderRadius: "20px",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+  border: "1px solid rgba(255,255,255,0.3)"
 };
 
 const titleStyle = {
   marginBottom: "6px",
-  color: "#2c3e50",
+  fontSize: "1.8rem",
+  fontWeight: "800",
+  color: "#111827",
   textAlign: "center"
 };
 
 const subtitleStyle = {
-  marginBottom: "20px",
-  color: "#7f8c8d",
+  marginBottom: "22px",
+  color: "#6b7280",
   textAlign: "center",
-  fontSize: "0.95rem"
+  fontSize: "0.9rem"
 };
 
 const formStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "12px"
+  gap: "14px"
 };
 
 const inputStyle = {
-  padding: "12px",
-  borderRadius: "8px",
-  border: "1px solid #ddd",
+  padding: "14px",
+  borderRadius: "10px",
+  border: "1px solid #e5e7eb",
   fontSize: "1rem",
-  outline: "none"
+  outline: "none",
+  backgroundColor: "#f9fafb",
+  transition: "all 0.2s ease"
 };
 
 const checkboxRow = {
@@ -239,34 +253,38 @@ const checkboxRow = {
   gap: "10px",
   marginTop: "10px",
   cursor: "pointer",
-  fontSize: "0.95rem"
+  fontSize: "0.9rem",
+  color: "#374151"
 };
 
 const membershipCard = {
   marginTop: "10px",
-  padding: "14px",
-  borderRadius: "10px",
-  border: "1px solid #3498db",
-  backgroundColor: "#f8fbff"
+  padding: "16px",
+  borderRadius: "14px",
+  border: "1px solid #3b82f6",
+  background: "linear-gradient(135deg, #eff6ff, #f0fdf4)"
 };
 
 const labelStyle = {
-  fontSize: "0.85rem",
-  marginBottom: "5px",
+  fontSize: "0.8rem",
+  marginBottom: "4px",
   display: "block",
-  color: "#2c3e50"
+  color: "#374151",
+  fontWeight: "600"
 };
 
 const btnStyle = {
-  marginTop: "10px",
-  backgroundColor: "#27ae60",
+  marginTop: "14px",
+  background: "linear-gradient(135deg, #22c55e, #16a34a)",
   color: "white",
-  padding: "12px",
+  padding: "14px",
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "12px",
   cursor: "pointer",
   fontWeight: "bold",
-  fontSize: "1rem"
+  fontSize: "1rem",
+  boxShadow: "0 10px 20px rgba(34,197,94,0.25)",
+  transition: "all 0.2s ease"
 };
 
 export default SignUp;

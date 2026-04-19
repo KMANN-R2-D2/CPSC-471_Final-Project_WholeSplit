@@ -21,7 +21,8 @@ app.use(cors());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'StridingTrident!%$709#', // change to your password
+    port: 3307,
+    password: 'Walkingdead666!', // change to your password
     database: 'WholeSplitDB'
 });
 

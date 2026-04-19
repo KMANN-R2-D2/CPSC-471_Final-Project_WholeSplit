@@ -79,6 +79,8 @@ const PickStore = () => {
             onClick={() =>
               handleStoreSelect(store.StoreID, store.Name)
             }
+            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.03)"}
+  onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
             style={cardStyle}
           >
             <h3 style={storeNameStyle}>
@@ -123,61 +125,72 @@ const PickStore = () => {
 
 // Page wrapper
 const pageStyle = {
-  padding: "20px",
-  fontFamily: "Segoe UI, sans-serif"
+  minHeight: "100vh",
+  padding: "30px 20px",
+  fontFamily: "Inter, Segoe UI, sans-serif",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)"
 };
 
 // Header section
 const headerStyle = {
-  marginBottom: "20px"
+  marginBottom: "24px",
+  textAlign: "center"
 };
 
 // List container
 const listStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "12px"
+  gap: "16px",
+  maxWidth: "520px",
+  margin: "0 auto"
 };
 
 // Store card
 const cardStyle = {
-  backgroundColor: "#fff",
-  border: "1px solid #eee",
-  borderRadius: "12px",
-  padding: "16px",
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(8px)",
+  border: "1px solid #e5e7eb",
+  borderRadius: "16px",
+  padding: "18px",
   cursor: "pointer",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-  transition: "0.2s ease"
+  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+  transition: "all 0.2s ease"
 };
 
 // Store name
 const storeNameStyle = {
   margin: 0,
-  color: "#2c3e50"
+  fontSize: "1.2rem",
+  fontWeight: "700",
+  color: "#111827"
 };
 
 // City text
 const cityStyle = {
   margin: "6px 0 0 0",
-  color: "#7f8c8d"
+  color: "#6b7280",
+  fontSize: "0.9rem"
 };
 
 // Action hint text
 const actionText = {
-  marginTop: "10px",
+  marginTop: "12px",
   fontSize: "13px",
-  color: "#3498db",
-  fontWeight: "bold"
+  color: "#2563eb",
+  fontWeight: "600"
 };
 
 // Special "Add store" card (visually different)
 const addStoreCardStyle = {
-  backgroundColor: "#f9fbff",
-  border: "2px dashed #3498db",
-  borderRadius: "12px",
-  padding: "16px",
+  background: "rgba(255,255,255,0.6)",
+  border: "2px dashed #3b82f6",
+  borderRadius: "16px",
+  padding: "20px",
   cursor: "pointer",
-  textAlign: "center"
+  textAlign: "center",
+  backdropFilter: "blur(6px)",
+  transition: "all 0.2s ease"
 };
 
 export default PickStore;

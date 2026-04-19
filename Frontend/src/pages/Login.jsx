@@ -91,7 +91,8 @@ const Login = () => {
         <form onSubmit={handleLogin} style={formStyle}>
 
           {/* EMAIL */}
-          <input
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"}
             type="email"
             name="Email"
             placeholder="Email Address"
@@ -101,7 +102,8 @@ const Login = () => {
           />
 
           {/* PASSWORD */}
-          <input
+          <input onFocus={(e) => e.target.style.border = "1px solid #3b82f6"}
+onBlur={(e) => e.target.style.border = "1px solid #e5e7eb"}
             type="password"
             name="Password"
             placeholder="Password"
@@ -111,7 +113,8 @@ const Login = () => {
           />
 
           {/* LOGIN BUTTON */}
-          <button type="submit" style={buttonStyle}>
+          <button onMouseOver={(e) => e.target.style.transform = "scale(1.04)"}
+onMouseOut={(e) => e.target.style.transform = "scale(1)"} type="submit" style={buttonStyle}>
             Login
           </button>
 
@@ -133,32 +136,37 @@ const pageStyle = {
   justifyContent: "center",
   alignItems: "center",
   padding: "20px",
-  fontFamily: "Segoe UI, sans-serif",
-  backgroundColor: "#f5f7fa"
+  fontFamily: "Inter, Segoe UI, sans-serif",
+  background: "linear-gradient(135deg, #dbeafe, #f0fdf4)"
 };
 
 // Login card container
 const cardStyle = {
   width: "100%",
   maxWidth: "420px",
-  backgroundColor: "#fff",
-  padding: "28px",
-  borderRadius: "14px",
-  boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+  background: "rgba(255,255,255,0.9)",
+  backdropFilter: "blur(10px)",
+  padding: "32px",
+  borderRadius: "20px",
+  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+  border: "1px solid rgba(255,255,255,0.3)",
   textAlign: "center"
 };
 
 // Title
 const titleStyle = {
-  marginBottom: "8px",
-  color: "#2c3e50"
+  marginBottom: "6px",
+  fontSize: "1.8rem",
+  fontWeight: "800",
+  color: "#111827",
+  letterSpacing: "-0.5px"
 };
 
 // Subtitle
 const subtitleStyle = {
-  marginBottom: "20px",
-  color: "#7f8c8d",
-  fontSize: "0.95rem"
+  marginBottom: "22px",
+  color: "#6b7280",
+  fontSize: "0.9rem"
 };
 
 // Form layout
@@ -170,24 +178,28 @@ const formStyle = {
 
 // Inputs
 const inputStyle = {
-  padding: "12px",
-  borderRadius: "8px",
-  border: "1px solid #ddd",
+  padding: "14px",
+  borderRadius: "10px",
+  border: "1px solid #e5e7eb",
   fontSize: "1rem",
-  outline: "none"
+  outline: "none",
+  transition: "all 0.2s ease",
+  backgroundColor: "#f9fafb"
 };
 
 // Login button
 const buttonStyle = {
-  marginTop: "10px",
-  backgroundColor: "#3498db",
+  marginTop: "12px",
+  background: "linear-gradient(135deg, #3b82f6, #2563eb)",
   color: "white",
-  padding: "12px",
+  padding: "14px",
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "12px",
   fontWeight: "bold",
   cursor: "pointer",
-  fontSize: "1rem"
+  fontSize: "1rem",
+  boxShadow: "0 10px 20px rgba(37,99,235,0.25)",
+  transition: "all 0.2s ease"
 };
 
 export default Login;
